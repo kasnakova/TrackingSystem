@@ -174,11 +174,6 @@
             data.Targets.Update(target);
             data.SaveChanges();
 
-            if (shouldNotMove)
-            {
-
-            }
-
             return Ok();
         }
 

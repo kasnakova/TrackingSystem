@@ -50,7 +50,7 @@
                 return BadRequest();
             }
 
-            var position = new Position()
+            var newPosition = new Position()
             {
                 TargetIdentifierId = existingIdentifier.Id,
                 Latitude = positionModel.Latitude,
@@ -58,7 +58,28 @@
                 DateTime = DateTime.Now
             };
 
-            data.Positions.Add(position);
+            var shouldNotMoveTrackers = data.Targets.All()
+                .Where(t => t.TargetIdentifierId == existingIdentifier.Id && !t.Deleted && t.Active && t.ShouldNotMove && t.ShouldNotMoveUntil > DateTime.Now && !t.NotificationSent);
+            if (shouldNotMoveTrackers.Count() > 0)
+            {
+                var lastPosition = data.Positions.All()
+                    .Where(p => p.TargetIdentifierId == existingIdentifier.Id)
+                    .OrderByDescending(p => p.DateTime)
+                    .Take(1)
+                    .FirstOrDefault();
+
+                if (lastPosition.Latitude != newPosition.Latitude || lastPosition.Longitude != newPosition.Longitude)
+                {
+                    //send to users notification via GCM
+                    foreach (var tracker in shouldNotMoveTrackers)
+                    {
+                        tracker.NotificationSent = true;
+                        data.Targets.Update(tracker);
+                    }
+                }
+            }
+            
+            data.Positions.Add(newPosition);
             data.SaveChanges();
             return Ok();
         }
