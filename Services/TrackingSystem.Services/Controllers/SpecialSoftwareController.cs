@@ -1,11 +1,11 @@
 ﻿namespace TrackingSystem.Services.Controllers
 {
-    using Models;
     using System;
     using System.Linq;
     using System.Web.Http;
     using TrackingSystem.Data;
     using TrackingSystem.Models;
+    using Models;
     using static TrackingSystem.Common.Constants;
 
     public class SpecialSoftwareController : BaseApiController
@@ -23,17 +23,26 @@
         }
 
         [HttpPost]
-        public IHttpActionResult RegisterIdentifier(string identifier)
+        public IHttpActionResult RegisterIdentifier(TargetIdentityBindingModel targetIdentity)
         {
-            var existingIdentifier = data.TargetIdentifiers.All().Where(i => i.Identifier == identifier).FirstOrDefault();
-            if ((identifier.Length < MinLengthIdentifier) || (identifier.Length > MaxLengthStringField) || (existingIdentifier != null))
+            if (!ModelState.IsValid)
             {
                 return BadRequest();
             }
 
-            var targetIdentifier = new TargetIdentifier()
+            var existingIdentifier = data.TargetIdentifiers.All()
+                .Where(i => i.Identifier == targetIdentity.Identifier || i.GCMKey == targetIdentity.GCMKey).FirstOrDefault();
+
+            if(existingIdentifier != null)
             {
-                Identifier = identifier
+                return BadRequest();
+            }
+
+            var targetIdentifier = new TargetIdentity()
+            {
+                Identifier = targetIdentity.Identifier,
+                GCMKey = targetIdentity.GCMKey,
+                DateCreated = DateTime.Now
             };
 
             data.TargetIdentifiers.Add(targetIdentifier);

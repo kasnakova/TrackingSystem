@@ -19,6 +19,7 @@ using TrackingSystem.Services.Providers;
 using TrackingSystem.Services.Results;
 using TrackingSystem.Models;
 using TrackingSystem.Data;
+using System.Linq;
 
 namespace TrackingSystem.Services.Controllers
 {
@@ -332,11 +333,12 @@ namespace TrackingSystem.Services.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var dfg = BadRequest(ModelState);
                 return BadRequest(ModelState);
             }
 
-            var user = new ApplicationUser() { UserName = model.Email, Email = model.Email };
+            var data = new TrackingSystemData(TrackingSystemDbContext.Create());
+            var device = data.TargetIdentifiers.All().Where(t => t.Identifier == model.Identifier).FirstOrDefault();
+            var user = new ApplicationUser() { UserName = model.Email, Email = model.Email, DeviceId = device.Id };
 
             IdentityResult result = await UserManager.CreateAsync(user, model.Password);
 

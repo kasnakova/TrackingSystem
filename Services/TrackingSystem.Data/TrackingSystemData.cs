@@ -30,9 +30,9 @@
         }
 
 
-        public IRepository<TargetIdentifier> TargetIdentifiers
+        public IRepository<TargetIdentity> TargetIdentifiers
         {
-            get { return this.GetRepository<TargetIdentifier>(); }
+            get { return this.GetRepository<TargetIdentity>(); }
         }
         
         public IRepository<Position> Positions

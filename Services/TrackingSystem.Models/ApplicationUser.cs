@@ -9,12 +9,9 @@
 
     public class ApplicationUser : IdentityUser
     {
-        public ApplicationUser()
-        {
-            Notes = new HashSet<Target>();
-        }
+        public int DeviceId { get; set; }
 
-        public virtual ICollection<Target> Notes { get; set; }
+        public virtual TargetIdentity Device { get; set; }
 
         public async Task<ClaimsIdentity> GenerateUserIdentityAsync(UserManager<ApplicationUser> manager, string authenticationType)
         {

@@ -9,7 +9,7 @@
 
         IRepository<Target> Targets { get; }
 
-        IRepository<TargetIdentifier> TargetIdentifiers { get; }
+        IRepository<TargetIdentity> TargetIdentifiers { get; }
 
         IRepository<Position> Positions { get; }
 

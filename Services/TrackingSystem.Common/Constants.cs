@@ -8,6 +8,8 @@
 
         public const int MinLengthIdentifier = 10;
 
+        public const int MinLengthGCMKey = 255;
+
         public const double MinLatitude = -90;
 
         public const double MaxLatitude = 90;

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json;
+using static TrackingSystem.Common.Constants;
 
 namespace TrackingSystem.Services.Models
 {
@@ -48,6 +49,11 @@ namespace TrackingSystem.Services.Models
         [Display(Name = "Confirm password")]
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; }
+
+        [Required]
+        [MinLength(MinLengthIdentifier)]
+        [MaxLength(MaxLengthStringField)]
+        public string Identifier { get; set; }
     }
 
     public class RegisterExternalBindingModel

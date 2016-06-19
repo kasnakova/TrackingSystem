@@ -207,13 +207,16 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Infrastructure\AspNetUserIdProvider.cs" />
+    <Compile Include="Infrastructure\GCMProvider.cs" />
     <Compile Include="Infrastructure\IUserIdProvider.cs" />
+    <Compile Include="Infrastructure\PushMessageType.cs" />
     <Compile Include="Models\AccountBindingModels.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\HistoryPositionViewModel.cs" />
     <Compile Include="Models\PositionBindingModel.cs" />
     <Compile Include="Models\PositionViewModel.cs" />
     <Compile Include="Models\TargetBindingModels.cs" />
+    <Compile Include="Models\TargetIdentityBindingModel.cs" />
     <Compile Include="Models\TargetViewModels.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Providers\ApplicationOAuthProvider.cs" />

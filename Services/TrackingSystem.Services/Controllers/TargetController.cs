@@ -153,7 +153,7 @@
 
             if (trackingsCount == 0)
             {
-                //push to device to isActive sending coordinates via GCM
+                GCMProvider.SendMessage(target.TargetIdentifier.GCMKey, PushMessageType.SetIsTargetActive, isActive.ToString());
             }
 
             return Ok();
@@ -185,8 +185,8 @@
             {
                 return BadRequest(TextNotValidTarget);
             }
-
-            //push to device via GCM
+            
+            GCMProvider.SendMessage(target.TargetIdentifier.GCMKey, PushMessageType.TurnAlarmOn, string.Empty);
             return Ok();
         }
 

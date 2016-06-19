@@ -23,6 +23,6 @@
         [Required]
         public int TargetIdentifierId { get; set; }
 
-        public virtual TargetIdentifier TargetIdentifier { get; set; }
+        public virtual TargetIdentity TargetIdentifier { get; set; }
     }
 }
