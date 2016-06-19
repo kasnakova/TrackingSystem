@@ -1,5 +1,6 @@
 package tu.tracking.system.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -9,15 +10,29 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
+
 import tu.tracking.system.R;
+import tu.tracking.system.services.SpecialSoftwareIntentService;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback {
+    private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
+    private static final String TAG = "TheMainActivity";
 
+    private GoogleMap mMap;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -29,7 +44,7 @@ public class MainActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                Snackbar.make(view, "Replace with your own action Replace with your own action Replace with your own action Replace with your own action Replace with your own action", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
             }
         });
@@ -42,6 +57,57 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+        //Add Google Map
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
+        startSpecialSoftwareService();
+    }
+
+//    @Override
+//    protected void onPause() {
+//        Log.d(TAG, "onPause before super");
+//        super.onPause();
+//        Log.d(TAG, "onPause after super");
+//    }
+
+//    @Override
+//    protected void onStop() {
+//        Log.d(TAG, "onStop before super");
+//        super.onStop();
+//        finish();
+//        Log.d(TAG, "onStop after super and finish");
+//    }
+
+//    @Override
+//    protected void onRestart() {
+//        Log.d(TAG, "onRestart before super");
+//        super.onRestart();
+//        Log.d(TAG, "onRestart after super");
+//    }
+//
+//    @Override
+//    protected void onResume() {
+//        Log.d(TAG, "onResume before super");
+//        super.onResume();
+//        Log.d(TAG, "onResume after super");
+//    }
+
+    private void startSpecialSoftwareService(){
+        boolean isServiceAlreadyStarted = false;//PreferenceManager.getDefaultSharedPreferences(this).getBoolean(Constants.IS_SPECIAL_SOFTWARE_SERVICE_STARTED, false);
+        if (checkPlayServices() && !isServiceAlreadyStarted) {
+//            final Activity thisActivity = this;
+//            Thread thread = new Thread(new Runnable() {
+//                @Override
+//                public void run() {
+                    Intent intent = new Intent(this, SpecialSoftwareIntentService.class);
+                    startService(intent);
+//                }
+//            });
+//
+//            thread.start();
+        }
     }
 
     @Override
@@ -98,6 +164,32 @@ public class MainActivity extends AppCompatActivity
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
+        return true;
+    }
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        mMap = googleMap;
+
+        // Add a marker in Sydney and move the camera
+        LatLng sydney = new LatLng(-34, 151);
+        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+    }
+
+    private boolean checkPlayServices() {
+        GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
+        int resultCode = apiAvailability.isGooglePlayServicesAvailable(this);
+        if (resultCode != ConnectionResult.SUCCESS) {
+            if (apiAvailability.isUserResolvableError(resultCode)) {
+                apiAvailability.getErrorDialog(this, resultCode, PLAY_SERVICES_RESOLUTION_REQUEST)
+                        .show();
+            } else {
+                Log.i(TAG, "This device is not supported.");
+                finish();
+            }
+            return false;
+        }
         return true;
     }
 }

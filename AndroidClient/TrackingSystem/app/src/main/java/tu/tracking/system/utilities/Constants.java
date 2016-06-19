@@ -12,6 +12,7 @@ public class Constants {
     public static final String SENT_TOKEN_TO_SERVER = "sentTokenToServer";
     public static final String REGISTRATION_COMPLETE = "registrationComplete";
     public static final String IS_DEVICE_ACTIVE = "isDeviceActive";
+    public static final String IS_SPECIAL_SOFTWARE_SERVICE_STARTED = "isSpecialSoftwareServiceStarted";
 
     public static final String JSON_ACCESS_TOKEN = "access_token";
 }

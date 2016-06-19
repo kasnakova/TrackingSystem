@@ -57,9 +57,11 @@ public class HttpRequester extends AsyncTask<String, Void, HttpResult> {
                     wr.flush();
                     wr.close();
                 }
+
+                AndroidLogger.getInstance().logMessage(TAG, "urlParameters " + urlParameters);
             }
 
-            AndroidLogger.getInstance().logMessage(TAG, "Sending http request");
+            AndroidLogger.getInstance().logMessage(TAG, "Sending http request to " + url);
             int responseCode = connection.getResponseCode();
             AndroidLogger.getInstance().logMessage(TAG, "Response code " + responseCode);
 

@@ -47,9 +47,6 @@ import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import tu.tracking.system.R;
 import tu.tracking.system.http.HttpResult;
 import tu.tracking.system.http.TrackingSystemHttpRequester;
@@ -63,9 +60,11 @@ public class SpecialSoftwareIntentService extends Service implements ITrackingSy
     private static final String TAG = "SpecSoftIntentService";
     private static final String[] TOPICS = {"global"};
 
+    private TrackingSystemHttpRequester httpRequester = new TrackingSystemHttpRequester(this, null);
+
     GoogleApiClient mGoogleApiClient;
     //private PowerManager.WakeLock wakeLock;
-   // private LocationManager locationManager;
+    // private LocationManager locationManager;
 
     protected void registerGCM() {
         final Service thisService = this;
@@ -82,7 +81,7 @@ public class SpecialSoftwareIntentService extends Service implements ITrackingSy
                     // See https://developers.google.com/cloud-messaging/android/start for details on this file.
 
                     boolean isDeviceRegistered = sharedPreferences.getBoolean(Constants.SENT_TOKEN_TO_SERVER, false);
-                    if(!isDeviceRegistered) {
+                    if (!isDeviceRegistered) {
                         // [START get_token]
                         InstanceID instanceID = InstanceID.getInstance(thisService);
                         String token = instanceID.getToken(getString(R.string.gcm_defaultSenderId),
@@ -119,15 +118,18 @@ public class SpecialSoftwareIntentService extends Service implements ITrackingSy
      * @param token The new token.
      */
     private void sendRegistrationToServer(String token) {
-        TrackingSystemHttpRequester httpRequester = new TrackingSystemHttpRequester(this, null);
-        TelephonyManager telephonyManager = (TelephonyManager)getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
-        String deviceId = telephonyManager.getDeviceId();
-        httpRequester.registerTargetIdentity(deviceId, token);
+        httpRequester.registerTargetIdentity(getDeviceId(), token);
+    }
+
+    private String getDeviceId() {
+        TelephonyManager telephonyManager = (TelephonyManager) getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
+        return telephonyManager.getDeviceId();
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
+        PreferenceManager.getDefaultSharedPreferences(this).edit().putBoolean(Constants.IS_SPECIAL_SOFTWARE_SERVICE_STARTED, true).apply();
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
@@ -177,9 +179,9 @@ public class SpecialSoftwareIntentService extends Service implements ITrackingSy
                     case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
                         // Location settings are not satisfied, but this can be fixed
                         // by showing the user a dialog.
-                   //     try {
-                            // Show the dialog by calling startResolutionForResult(),
-                            // and check the result in onActivityResult().
+                        //     try {
+                        // Show the dialog by calling startResolutionForResult(),
+                        // and check the result in onActivityResult().
 //                            status.startResolutionForResult(
 //                                    SpecialSoftwareIntentService.this,
 //                                    REQUEST_CHECK_SETTINGS);
@@ -202,7 +204,8 @@ public class SpecialSoftwareIntentService extends Service implements ITrackingSy
     @Override
     public void onDestroy() {
         super.onDestroy();
-       // wakeLock.release();
+        // wakeLock.release();
+        PreferenceManager.getDefaultSharedPreferences(this).edit().putBoolean(Constants.IS_SPECIAL_SOFTWARE_SERVICE_STARTED, false).apply();
         mGoogleApiClient.disconnect();
     }
 
@@ -238,6 +241,8 @@ public class SpecialSoftwareIntentService extends Service implements ITrackingSy
                 sharedPreferences.edit().putBoolean(Constants.SENT_TOKEN_TO_SERVER, false).apply();
                 AndroidLogger.getInstance().logMessage(TAG, "Problem registering target identity");
             }
+
+            AndroidLogger.getInstance().logMessage(TAG, "Http Message: " + result.getData());
         } else {
             AndroidLogger.getInstance().logMessage(TAG, "The result of the http request was null");
         }
@@ -277,31 +282,16 @@ public class SpecialSoftwareIntentService extends Service implements ITrackingSy
     public void onLocationChanged(Location location) {
         Log.e(TAG, "Location Changed");
 
-        if (location == null)
+        if (location == null) {
             return;
+        }
 
-        if (isConnectingToInternet(getApplicationContext())) {
-            JSONArray jsonArray = new JSONArray();
-            JSONObject jsonObject = new JSONObject();
-
-            try {
-                Log.e(TAG, location.getLatitude() + ";" + location.getLongitude());
-                Toast.makeText(getApplicationContext(), location.getLatitude() + ";" + location.getLongitude(),
-                        Toast.LENGTH_LONG).show();
-                jsonObject.put("latitude", location.getLatitude());
-                jsonObject.put("longitude", location.getLongitude());
-
-                jsonArray.put(jsonObject);
-
-                Log.e("request", jsonArray.toString());
-//
-//                    new LocationWebService().execute(new String[] {
-//                            Constants.TRACK_URL, jsonArray.toString() });
-            } catch (Exception e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-
+        AndroidLogger.getInstance().logMessage(TAG, "Current location: " + location.getLatitude() + ";" + location.getLongitude());
+        boolean isConnectedToInternet = isConnectingToInternet(getApplicationContext());
+        AndroidLogger.getInstance().logMessage(TAG, "Is connected to net: " + isConnectedToInternet);
+        if (isConnectedToInternet) {
+            AndroidLogger.getInstance().logMessage(TAG, "Latitude is " + location.getLatitude());
+            httpRequester.sendCoordinates(getDeviceId(), location.getLatitude(), location.getLongitude());
         }
     }
 }
