@@ -6,6 +6,7 @@
     using TrackingSystem.Data;
     using TrackingSystem.Models;
     using Models;
+    using TrackingSystem.Services.Infrastructure;
     using static TrackingSystem.Common.Constants;
 
     public class SpecialSoftwareController : BaseApiController
@@ -77,11 +78,12 @@
                     .Take(1)
                     .FirstOrDefault();
 
-                if (lastPosition.Latitude != newPosition.Latitude || lastPosition.Longitude != newPosition.Longitude)
+                if (Math.Abs(lastPosition.Latitude - newPosition.Latitude) > CoordiatePrecision || Math.Abs(lastPosition.Longitude - newPosition.Longitude) > CoordiatePrecision)
                 {
                     //send to users notification via GCM
                     foreach (var tracker in shouldNotMoveTrackers)
                     {
+                        GCMProvider.SendMessage(tracker.User.Device.GCMKey, PushMessageType.TargetMovingWhenShouldNot, tracker.Name);
                         tracker.NotificationSent = true;
                         data.Targets.Update(tracker);
                     }

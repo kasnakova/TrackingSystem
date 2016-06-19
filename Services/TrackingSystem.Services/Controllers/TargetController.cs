@@ -170,6 +170,7 @@
 
             target.ShouldNotMove = shouldNotMove;
             target.ShouldNotMoveUntil = shouldNotMoveUntil;
+            target.NotificationSent = false;
 
             data.Targets.Update(target);
             data.SaveChanges();
@@ -186,7 +187,7 @@
                 return BadRequest(TextNotValidTarget);
             }
             
-            GCMProvider.SendMessage(target.TargetIdentifier.GCMKey, PushMessageType.TurnAlarmOn, string.Empty);
+            GCMProvider.SendMessage(target.TargetIdentifier.GCMKey, PushMessageType.TurnAlarmOn);
             return Ok();
         }
 

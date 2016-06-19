@@ -10,6 +10,8 @@
 
         public const int MinLengthGCMKey = 255;
 
+        public const double CoordiatePrecision = 0.0001;
+
         public const double MinLatitude = -90;
 
         public const double MaxLatitude = 90;
