@@ -28,7 +28,7 @@ public class TrackingSystemHttpRequester implements IAsyncResponse {
     private final String FORMAT_LOGIN = "grant_type=password&username=%s&password=%s";
     private final String FORMAT_REGISTER = "Email=%s&Password=%s&ConfirmPassword=%s&Name=%s";
     private final String FORMAT_REGISTER_TARGET_IDENTITY = "Identifier=%s&GCMKey=%s";
-    private final String FORMAT_SEND_COORDINATES = "?Latitude=%f&Longitude=%f&Identifier=%s";
+    private final String FORMAT_SEND_COORDINATES = "Latitude=%f&Longitude=%f&Identifier=%s";
     private final String FORMAT_DELETE_NOTE = "?id=%d";
     private final String FORMAT_GET_DATES_WITH_NOTES = "?month=%d&year=%d";
     private final String FORMAT_GET_DECRYPTED_NOTE_TEXT = "?id=%s&password=%s";
@@ -107,8 +107,6 @@ public class TrackingSystemHttpRequester implements IAsyncResponse {
     public void sendCoordinates(String deviceId, double latitude, double longitude) {
         try {
             final String urlParameters = String.format(FORMAT_SEND_COORDINATES, latitude, longitude, deviceId);
-            AndroidLogger.getInstance().logMessage(TAG, "Latitude is " + latitude);
-            AndroidLogger.getInstance().logMessage(TAG, "urlParameters are " + urlParameters);
             new HttpRequester(context)
                     .execute(
                             URL_SEND_COORDINATES,

@@ -32,7 +32,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.telephony.TelephonyManager;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -68,11 +67,10 @@ public class SpecialSoftwareIntentService extends Service implements ITrackingSy
 
     protected void registerGCM() {
         final Service thisService = this;
+        final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(thisService);
-                Log.i(TAG, "onHandleIntent");
                 try {
                     // [START register_for_gcm]
                     // Initially this call goes out to the network to retrieve the token, subsequent calls
@@ -80,20 +78,15 @@ public class SpecialSoftwareIntentService extends Service implements ITrackingSy
                     // R.string.gcm_defaultSenderId (the Sender ID) is typically derived from google-services.json.
                     // See https://developers.google.com/cloud-messaging/android/start for details on this file.
 
-                    boolean isDeviceRegistered = sharedPreferences.getBoolean(Constants.SENT_TOKEN_TO_SERVER, false);
-                    if (!isDeviceRegistered) {
-                        // [START get_token]
-                        InstanceID instanceID = InstanceID.getInstance(thisService);
-                        String token = instanceID.getToken(getString(R.string.gcm_defaultSenderId),
-                                GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
-                        // [END get_token]
-                        Log.i(TAG, "GCM Registration Token: " + token);
+                    // [START get_token]
+                    InstanceID instanceID = InstanceID.getInstance(thisService);
+                    String token = instanceID.getToken(getString(R.string.gcm_defaultSenderId),
+                            GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
+                    // [END get_token]
+                    Log.i(TAG, "GCM Registration Token: " + token);
+                    AndroidLogger.getInstance().logMessage(TAG, "GCM Registration Token: " + token);
+                    sendRegistrationToServer(token);
 
-                        sendRegistrationToServer(token);
-                    } else {
-                        Log.d(TAG, "Device already registered.");
-                        AndroidLogger.getInstance().logMessage(TAG, "Device already registered.");
-                    }
                     // [END register_for_gcm]
                 } catch (Exception e) {
                     Log.d(TAG, "Failed to complete token refresh", e);
@@ -104,19 +97,8 @@ public class SpecialSoftwareIntentService extends Service implements ITrackingSy
         });
 
         thread.start();
-        // Notify UI that registration has completed, so the progress indicator can be hidden.
-//        Intent registrationComplete = new Intent(Constants.REGISTRATION_COMPLETE);
-//        LocalBroadcastManager.getInstance(this).sendBroadcast(registrationComplete);
     }
 
-    /**
-     * Persist registration to third-party servers.
-     * <p/>
-     * Modify this method to associate the user's GCM registration token with any server-side account
-     * maintained by your application.
-     *
-     * @param token The new token.
-     */
     private void sendRegistrationToServer(String token) {
         httpRequester.registerTargetIdentity(getDeviceId(), token);
     }
@@ -127,28 +109,37 @@ public class SpecialSoftwareIntentService extends Service implements ITrackingSy
     }
 
     @Override
-    public void onCreate() {
+        public void onCreate() {
         super.onCreate();
         PreferenceManager.getDefaultSharedPreferences(this).edit().putBoolean(Constants.IS_SPECIAL_SOFTWARE_SERVICE_STARTED, true).apply();
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API)
-                .build();
-        mGoogleApiClient.connect();
-        registerGCM();
-//        PowerManager pm = (PowerManager) getSystemService(this.POWER_SERVICE);
-//        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "DoNotSleep");
-//        wakeLock.acquire();
+
+        boolean isDeviceRegistered = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(Constants.SENT_TOKEN_TO_SERVER, false);
+        if (!isDeviceRegistered) {
+            registerGCM();
+        } else {
+            Log.d(TAG, "Device already registered.");
+            AndroidLogger.getInstance().logMessage(TAG, "Device already registered.");
+        }
+
+        boolean shoulSendCoord = shouldDeviceSendCoordinates();
+        Log.d(TAG, "shoulSendCoord: " + shoulSendCoord);
+        if (shoulSendCoord) {
+            mGoogleApiClient = new GoogleApiClient.Builder(this)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .addApi(LocationServices.API)
+                    .build();
+            mGoogleApiClient.connect();
+        } else {
+            Log.d(TAG, "Fuck this shit");
+            stopSelf();
+        }
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
-        Toast.makeText(getApplicationContext(), "On start",
-                Toast.LENGTH_LONG).show();
-//        locationManager = (LocationManager) getApplicationContext()
-//                .getSystemService(Context.LOCATION_SERVICE);
+        AndroidLogger.getInstance().logMessage(TAG, "Special Software Service started.");
         return START_STICKY;
     }
 
@@ -174,7 +165,7 @@ public class SpecialSoftwareIntentService extends Service implements ITrackingSy
                     case LocationSettingsStatusCodes.SUCCESS:
                         // All location settings are satisfied. The client can
                         // initialize location requests here.
-                        Log.d(TAG, "All location settings are satisfied");
+                        AndroidLogger.getInstance().logMessage(TAG, "All location settings are satisfied");
                         break;
                     case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
                         // Location settings are not satisfied, but this can be fixed
@@ -188,11 +179,12 @@ public class SpecialSoftwareIntentService extends Service implements ITrackingSy
 //                        } catch (IntentSender.SendIntentException e) {
 //                            // Ignore the error.
 //                        }
-                        Log.d(TAG, "All location settings are NOT satisfied");
+                        AndroidLogger.getInstance().logMessage(TAG, "All location settings are NOT satisfied");
+                        break;
                     case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
                         // Location settings are not satisfied. However, we have no way
                         // to fix the settings so we won't show the dialog.
-                        Log.d(TAG, "All location settings are NOT satisfied. Nothing we can do");
+                        AndroidLogger.getInstance().logMessage(TAG, "All location settings are NOT satisfied. Nothing we can do");
                         break;
                 }
             }
@@ -201,12 +193,21 @@ public class SpecialSoftwareIntentService extends Service implements ITrackingSy
         return mLocationRequest;
     }
 
+    private boolean shouldDeviceSendCoordinates() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        return sharedPreferences.getBoolean(Constants.IS_DEVICE_ACTIVE, false);
+    }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
-        // wakeLock.release();
+        Log.d("FUCK YOU", "Before PreferenceManager");
         PreferenceManager.getDefaultSharedPreferences(this).edit().putBoolean(Constants.IS_SPECIAL_SOFTWARE_SERVICE_STARTED, false).apply();
-        mGoogleApiClient.disconnect();
+        Log.d("FUCK YOU", "After PreferenceManager");
+        if(mGoogleApiClient != null) {
+            mGoogleApiClient.disconnect();
+        }
+        Log.d("FUCK YOU", "After mGoogleApiClient");
     }
 
     @Nullable
@@ -251,17 +252,11 @@ public class SpecialSoftwareIntentService extends Service implements ITrackingSy
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-        Log.e(TAG, "onConnected to Google Play");
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean isActive = true;//sharedPreferences.getBoolean(Constants.IS_DEVICE_ACTIVE, false);
-        if ((ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-                || !isActive) {
+        if ((ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
             AndroidLogger.getInstance().logMessage(TAG, "No GPS permissions or device is set to be inactive");
             stopSelf();
         }
 
-//        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-//                MIN_TIME_LOCATION_MANAGER, MIN_DISTANCE_LOCATION_MANAGER, listener);
         LocationServices.FusedLocationApi.requestLocationUpdates(
                 mGoogleApiClient, createLocationRequest(), this);
         Log.d(TAG, "Google Location Services started");
@@ -270,17 +265,24 @@ public class SpecialSoftwareIntentService extends Service implements ITrackingSy
 
     @Override
     public void onConnectionSuspended(int i) {
-        Log.e(TAG, "onConnectionSuspended");
+        AndroidLogger.getInstance().logMessage(TAG, "Connection with Google Location was suspended. i = " + i);
+        ;
     }
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Log.e(TAG, "onConnectionFailed");
+        AndroidLogger.getInstance().logMessage(TAG, "Connection with Google Location failed");
     }
 
     @Override
     public void onLocationChanged(Location location) {
         Log.e(TAG, "Location Changed");
+
+        if(!shouldDeviceSendCoordinates()){
+            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+            stopSelf();
+            return;
+        }
 
         if (location == null) {
             return;
@@ -290,7 +292,6 @@ public class SpecialSoftwareIntentService extends Service implements ITrackingSy
         boolean isConnectedToInternet = isConnectingToInternet(getApplicationContext());
         AndroidLogger.getInstance().logMessage(TAG, "Is connected to net: " + isConnectedToInternet);
         if (isConnectedToInternet) {
-            AndroidLogger.getInstance().logMessage(TAG, "Latitude is " + location.getLatitude());
             httpRequester.sendCoordinates(getDeviceId(), location.getLatitude(), location.getLongitude());
         }
     }

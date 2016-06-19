@@ -20,8 +20,6 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.media.AudioManager;
-import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -33,8 +31,11 @@ import com.google.android.gms.gcm.GcmListenerService;
 
 import tu.tracking.system.R;
 import tu.tracking.system.activities.MainActivity;
+import tu.tracking.system.activities.StopAlarmActivity;
+import tu.tracking.system.utilities.AlarmManager;
 import tu.tracking.system.utilities.AndroidLogger;
 import tu.tracking.system.utilities.Constants;
+import tu.tracking.system.utilities.SpecialSoftwareManager;
 
 public class MyGcmListenerService extends GcmListenerService {
 
@@ -51,8 +52,7 @@ public class MyGcmListenerService extends GcmListenerService {
 
         switch (type) {
             case SetIsTargetActive:
-                PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
-                        .edit().putBoolean(Constants.IS_DEVICE_ACTIVE, Boolean.valueOf(message)).apply();
+                setIsTargetActive(Boolean.valueOf(message));
                 break;
             case TargetMovingWhenShouldNot:
                 sendNotification(message);
@@ -66,18 +66,22 @@ public class MyGcmListenerService extends GcmListenerService {
         }
     }
 
+    private void setIsTargetActive(boolean isActive){
+        PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
+                .edit().putBoolean(Constants.IS_DEVICE_ACTIVE, isActive).apply();
+        if(isActive){
+            AndroidLogger.getInstance().logMessage(TAG,
+                    SpecialSoftwareManager.start(getApplicationContext()) ?
+                    "Success in starting Special Software Service from MyGcmListenerService" :
+                    "Failed to start Special Software Service from MyGcmListenerService" );
+        }
+    }
+
     private void turnAlarmOn() {
-        AudioManager audioManager = (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
-        audioManager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
-        audioManager.setStreamVolume(
-                AudioManager.STREAM_RING,
-                audioManager.getStreamMaxVolume(AudioManager.STREAM_RING),
-                0);
-        MediaPlayer thePlayer = MediaPlayer.create(getApplicationContext(), RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE));
-        thePlayer.start();
-//        Intent stopAlarmIntent = new Intent(this, MyActivity.class);
-//        stopAlarmIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//        startActivity(stopAlarmIntent);
+        AlarmManager.start(getApplicationContext());
+        Intent stopAlarmIntent = new Intent(this, StopAlarmActivity.class);
+        stopAlarmIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(stopAlarmIntent);
     }
 
     private void sendNotification(String name) {
