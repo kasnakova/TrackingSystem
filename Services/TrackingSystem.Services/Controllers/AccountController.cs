@@ -6,7 +6,6 @@ using System.Security.Cryptography;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Http;
-using System.Web.Http.ModelBinding;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.AspNet.Identity.Owin;
@@ -20,6 +19,7 @@ using TrackingSystem.Services.Results;
 using TrackingSystem.Models;
 using TrackingSystem.Data;
 using System.Linq;
+using TrackingSystem.Services.Infrastructure;
 
 namespace TrackingSystem.Services.Controllers
 {
@@ -333,26 +333,21 @@ namespace TrackingSystem.Services.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(ModelStatePrettifier.Prettify(ModelState));
             }
 
             var data = new TrackingSystemData(TrackingSystemDbContext.Create());
             var device = data.TargetIdentifiers.All().Where(t => t.Identifier == model.Identifier).FirstOrDefault();
+            if(device == null)
+            {
+                return BadRequest("Sorry, but we could not register your device.");
+            }
+
             var user = new ApplicationUser() { UserName = model.Email, Email = model.Email, DeviceId = device.Id };
 
             IdentityResult result = await UserManager.CreateAsync(user, model.Password);
-
-            //just fixing error messages
-            var errors = new List<string>();
-            foreach (var error in result.Errors)
-            {
-                if (!error.Contains("Name")) 
-                {
-                    errors.Add(error.Replace("'", ""));
-                }
-            }
-
-            IdentityResult newResult = new IdentityResult(errors);
+            
+            IdentityResult newResult = new IdentityResult(result.Errors);
             if (!result.Succeeded)
             {
                 return GetErrorResult(newResult);
@@ -435,7 +430,7 @@ namespace TrackingSystem.Services.Controllers
                     return BadRequest();
                 }
 
-                return BadRequest(ModelState);
+                return BadRequest(ModelStatePrettifier.Prettify(ModelState));
             }
 
             return null;
