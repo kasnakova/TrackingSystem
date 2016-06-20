@@ -5,13 +5,12 @@ package tu.tracking.system.http;
  */
 public class HttpResult {
     private boolean success;
-    //private MyDiaryHttpServices service;
+    private String service;
     private String data;
 
-    public HttpResult(boolean success, String data){
-       // public TrackingSystemHttpResult(boolean success, MyDiaryHttpServices service, String data){
+    public HttpResult(boolean success, String service, String data){
         this.success = success;
-        //this.service = service;
+        this.service = service;
         this.data = data;
     }
 
@@ -19,9 +18,9 @@ public class HttpResult {
         return this.success;
     }
 
-//    public MyDiaryHttpServices getService(){
-//        return this.service;
-//    }
+    public String getService(){
+        return this.service;
+    }
 
     public String getData(){
         return this.data;

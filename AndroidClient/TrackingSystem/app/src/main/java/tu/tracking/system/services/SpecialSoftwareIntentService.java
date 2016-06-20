@@ -52,6 +52,7 @@ import tu.tracking.system.http.TrackingSystemHttpRequester;
 import tu.tracking.system.interfaces.ITrackingSystemHttpResponse;
 import tu.tracking.system.utilities.AndroidLogger;
 import tu.tracking.system.utilities.Constants;
+import static tu.tracking.system.http.TrackingSystemServices.*;
 
 public class SpecialSoftwareIntentService extends Service implements ITrackingSystemHttpResponse,
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
@@ -109,7 +110,7 @@ public class SpecialSoftwareIntentService extends Service implements ITrackingSy
     }
 
     @Override
-        public void onCreate() {
+    public void onCreate() {
         super.onCreate();
         PreferenceManager.getDefaultSharedPreferences(this).edit().putBoolean(Constants.IS_SPECIAL_SOFTWARE_SERVICE_STARTED, true).apply();
 
@@ -145,8 +146,8 @@ public class SpecialSoftwareIntentService extends Service implements ITrackingSy
 
     protected LocationRequest createLocationRequest() {
         LocationRequest mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(10000);
-        mLocationRequest.setFastestInterval(5000);
+        mLocationRequest.setInterval(Constants.INTERVAL_LOCATION_REQUEST);
+        mLocationRequest.setFastestInterval(Constants.FASTEST_INTERVAL_LOCATION_REQUEST);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
         LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
@@ -204,7 +205,7 @@ public class SpecialSoftwareIntentService extends Service implements ITrackingSy
         Log.d("FUCK YOU", "Before PreferenceManager");
         PreferenceManager.getDefaultSharedPreferences(this).edit().putBoolean(Constants.IS_SPECIAL_SOFTWARE_SERVICE_STARTED, false).apply();
         Log.d("FUCK YOU", "After PreferenceManager");
-        if(mGoogleApiClient != null) {
+        if (mGoogleApiClient != null) {
             mGoogleApiClient.disconnect();
         }
         Log.d("FUCK YOU", "After mGoogleApiClient");
@@ -235,12 +236,16 @@ public class SpecialSoftwareIntentService extends Service implements ITrackingSy
     public void trackingSystemProcessFinish(HttpResult result) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         if (result != null) {
-            if (result.getSuccess()) {
-                sharedPreferences.edit().putBoolean(Constants.SENT_TOKEN_TO_SERVER, true).apply();
-                AndroidLogger.getInstance().logMessage(TAG, "Registered target identity");
-            } else {
-                sharedPreferences.edit().putBoolean(Constants.SENT_TOKEN_TO_SERVER, false).apply();
-                AndroidLogger.getInstance().logMessage(TAG, "Problem registering target identity");
+            switch (result.getService()) {
+                case URL_REGISTER_TARGET_IDENTITY:
+                    if (result.getSuccess()) {
+                        sharedPreferences.edit().putBoolean(Constants.SENT_TOKEN_TO_SERVER, true).apply();
+                        AndroidLogger.getInstance().logMessage(TAG, "Registered target identity");
+                    } else {
+                        sharedPreferences.edit().putBoolean(Constants.SENT_TOKEN_TO_SERVER, false).apply();
+                        AndroidLogger.getInstance().logMessage(TAG, "Problem registering target identity");
+                    }
+                    break;
             }
 
             AndroidLogger.getInstance().logMessage(TAG, "Http Message: " + result.getData());
@@ -278,7 +283,7 @@ public class SpecialSoftwareIntentService extends Service implements ITrackingSy
     public void onLocationChanged(Location location) {
         Log.e(TAG, "Location Changed");
 
-        if(!shouldDeviceSendCoordinates()){
+        if (!shouldDeviceSendCoordinates()) {
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
             stopSelf();
             return;

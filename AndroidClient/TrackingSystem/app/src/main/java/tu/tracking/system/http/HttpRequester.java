@@ -83,13 +83,13 @@ public class HttpRequester extends AsyncTask<String, Void, HttpResult> {
             }
 
             in.close();
-            return new HttpResult(success, response.toString());
+            return new HttpResult(success, url, response.toString());
         } catch (Exception e) {
             try {
                 int responseCode = connection.getResponseCode();
                 AndroidLogger.getInstance().logMessage(TAG, "Response code from try block " + responseCode);
                 if (responseCode == 401) {
-                    return new HttpResult(false, e.getMessage());
+                    return new HttpResult(false, url, e.getMessage());
                 }
             } catch (Exception ex) {
                 AndroidLogger.getInstance().logError(TAG, ex);
