@@ -32,6 +32,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import tu.tracking.system.R;
 import tu.tracking.system.http.HttpResult;
 import tu.tracking.system.http.TrackingSystemHttpRequester;
+import tu.tracking.system.http.TrackingSystemServices;
 import tu.tracking.system.interfaces.ITrackingSystemHttpResponse;
 import tu.tracking.system.models.TrackingSystemUserModel;
 import tu.tracking.system.utilities.AndroidLogger;
@@ -55,7 +56,7 @@ public class MainActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action Replace with your own action Replace with your own action Replace with your own action Replace with your own action", Snackbar.LENGTH_LONG)
+                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
             }
         });
@@ -65,11 +66,10 @@ public class MainActivity extends AppCompatActivity
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
         toggle.syncState();
-
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        httpRequester = new TrackingSystemHttpRequester(this, this);
+        httpRequester = new TrackingSystemHttpRequester(this);
         //Add Google Map
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -131,7 +131,9 @@ public class MainActivity extends AppCompatActivity
             loginOrRegister();
         } else {
             TrackingSystemUserModel.setToken(accessToken);
-            TextView txtEmail = (TextView) findViewById(R.id.textViewEmail);
+            NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+            View v = navigationView.getHeaderView(0);
+            TextView txtEmail = (TextView ) v.findViewById(R.id.textViewEmail);
             String email = sharedPreferences.getString(Constants.EMAIL, "Welcome");
             txtEmail.setText(email);
         }
@@ -228,6 +230,18 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void trackingSystemProcessFinish(HttpResult result) {
-
+        if(result != null) {
+            switch (result.getService()) {
+                case TrackingSystemServices.URL_LOGOUT:
+                    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                    sharedPreferences.edit().remove(Constants.TOKEN).commit();
+                    AndroidLogger.getInstance().logMessage(TAG, "User logged out");
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            AndroidLogger.getInstance().logMessage(TAG, "The result of the http request was null");
+        }
     }
 }

@@ -30,7 +30,6 @@ import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
-import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -52,7 +51,9 @@ import tu.tracking.system.http.TrackingSystemHttpRequester;
 import tu.tracking.system.interfaces.ITrackingSystemHttpResponse;
 import tu.tracking.system.utilities.AndroidLogger;
 import tu.tracking.system.utilities.Constants;
-import static tu.tracking.system.http.TrackingSystemServices.*;
+import tu.tracking.system.utilities.DeviceManager;
+
+import static tu.tracking.system.http.TrackingSystemServices.URL_REGISTER_TARGET_IDENTITY;
 
 public class SpecialSoftwareIntentService extends Service implements ITrackingSystemHttpResponse,
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
@@ -60,7 +61,7 @@ public class SpecialSoftwareIntentService extends Service implements ITrackingSy
     private static final String TAG = "SpecSoftIntentService";
     private static final String[] TOPICS = {"global"};
 
-    private TrackingSystemHttpRequester httpRequester = new TrackingSystemHttpRequester(this, null);
+    private TrackingSystemHttpRequester httpRequester = new TrackingSystemHttpRequester(this);
 
     GoogleApiClient mGoogleApiClient;
     //private PowerManager.WakeLock wakeLock;
@@ -101,12 +102,7 @@ public class SpecialSoftwareIntentService extends Service implements ITrackingSy
     }
 
     private void sendRegistrationToServer(String token) {
-        httpRequester.registerTargetIdentity(getDeviceId(), token);
-    }
-
-    private String getDeviceId() {
-        TelephonyManager telephonyManager = (TelephonyManager) getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
-        return telephonyManager.getDeviceId();
+        httpRequester.registerTargetIdentity(DeviceManager.getDeviceId(getApplicationContext()), token);
     }
 
     @Override
@@ -297,7 +293,7 @@ public class SpecialSoftwareIntentService extends Service implements ITrackingSy
         boolean isConnectedToInternet = isConnectingToInternet(getApplicationContext());
         AndroidLogger.getInstance().logMessage(TAG, "Is connected to net: " + isConnectedToInternet);
         if (isConnectedToInternet) {
-            httpRequester.sendCoordinates(getDeviceId(), location.getLatitude(), location.getLongitude());
+            httpRequester.sendCoordinates(DeviceManager.getDeviceId(getApplicationContext()), location.getLatitude(), location.getLongitude());
         }
     }
 }

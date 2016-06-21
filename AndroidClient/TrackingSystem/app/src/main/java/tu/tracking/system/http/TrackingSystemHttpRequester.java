@@ -1,14 +1,15 @@
 package tu.tracking.system.http;
 
-import android.app.ProgressDialog;
-import android.content.Context;
-
 import tu.tracking.system.interfaces.IAsyncResponse;
 import tu.tracking.system.interfaces.ITrackingSystemHttpResponse;
 import tu.tracking.system.models.TrackingSystemUserModel;
 import tu.tracking.system.utilities.AndroidLogger;
 
-import static tu.tracking.system.http.TrackingSystemServices.*;
+import static tu.tracking.system.http.TrackingSystemServices.URL_LOGIN;
+import static tu.tracking.system.http.TrackingSystemServices.URL_LOGOUT;
+import static tu.tracking.system.http.TrackingSystemServices.URL_REGISTER;
+import static tu.tracking.system.http.TrackingSystemServices.URL_REGISTER_TARGET_IDENTITY;
+import static tu.tracking.system.http.TrackingSystemServices.URL_SEND_COORDINATES;
 
 public class TrackingSystemHttpRequester implements IAsyncResponse {
     private final String TAG = "TrackSysHttpRequester";
@@ -18,7 +19,7 @@ public class TrackingSystemHttpRequester implements IAsyncResponse {
     private final String METHOD_DELETE = "DELETE";
 
     private final String FORMAT_LOGIN = "grant_type=password&username=%s&password=%s";
-    private final String FORMAT_REGISTER = "Email=%s&Password=%s&ConfirmPassword=%s";
+    private final String FORMAT_REGISTER = "Email=%s&Password=%s&ConfirmPassword=%s&Identifier=%s";
     private final String FORMAT_REGISTER_TARGET_IDENTITY = "Identifier=%s&GCMKey=%s";
     private final String FORMAT_SEND_COORDINATES = "Latitude=%f&Longitude=%f&Identifier=%s";
     private final String FORMAT_DELETE_NOTE = "?id=%d";
@@ -27,21 +28,14 @@ public class TrackingSystemHttpRequester implements IAsyncResponse {
 
     private IAsyncResponse context = this;
     private ITrackingSystemHttpResponse delegate;
-    private ProgressDialog progress;
 
-    public TrackingSystemHttpRequester(ITrackingSystemHttpResponse delegate, Context contextForProgress) {
+    public TrackingSystemHttpRequester(ITrackingSystemHttpResponse delegate) {
         this.delegate = delegate;
-        if (contextForProgress != null) {
-            this.progress = new ProgressDialog(contextForProgress);
-            this.progress.setCancelable(true);
-            this.progress.setCanceledOnTouchOutside(true);
-        }
     }
 
-    public void register(String email, String password) {
+    public void register(String email, String password, String identifier) {
         try {
-            progress.show();
-            final String urlParameters = String.format(FORMAT_REGISTER, email, password, password);
+            final String urlParameters = String.format(FORMAT_REGISTER, email, password, password, identifier);
 
             new HttpRequester(context)
                     .execute(
@@ -55,7 +49,6 @@ public class TrackingSystemHttpRequester implements IAsyncResponse {
 
     public void login(String email, String password) {
         try {
-            progress.show();
             final String urlParameters = String.format(FORMAT_LOGIN, email, password);
 
             new HttpRequester(context)
@@ -70,7 +63,6 @@ public class TrackingSystemHttpRequester implements IAsyncResponse {
 
     public void logout() {
         try {
-            progress.show();
             new HttpRequester(context)
                     .execute(
                             URL_LOGOUT,
@@ -111,10 +103,6 @@ public class TrackingSystemHttpRequester implements IAsyncResponse {
 
     @Override
     public void processFinish(HttpResult data) {
-        if (progress != null) {
-            progress.dismiss();
-        }
-
         delegate.trackingSystemProcessFinish(data);
     }
 }

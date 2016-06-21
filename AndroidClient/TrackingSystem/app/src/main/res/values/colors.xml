@@ -5,4 +5,7 @@
     <color name="blue_grey_700">#455A64</color>
     <color name="blue_grey_800">#37474F</color>
     <color name="blue_grey_900">#263238</color>
+    <color name="dark_blue">#16182D</color>
+    <color name="light_blue">#4CAFDD</color>
+    <color name="dark_green">#4CAFDD</color>
 </resources>

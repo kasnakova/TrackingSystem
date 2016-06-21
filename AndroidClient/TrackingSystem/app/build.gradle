@@ -4,9 +4,6 @@ android {
     compileSdkVersion 23
     buildToolsVersion "23.0.3"
 
-    dexOptions {
-        javaMaxHeapSize "4g" //specify the heap size for the dex process
-    }
     defaultConfig {
         applicationId "tu.tracking.system"
         minSdkVersion 19
@@ -32,8 +29,10 @@ android {
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile 'com.google.android.gms:play-services-gcm:9.0.2'
-    compile 'com.google.android.gms:play-services:9.0.2'
-    compile 'com.android.support:appcompat-v7:24.0.0'
+    compile 'com.google.android.gms:play-services-location:9.0.2'
+    compile 'com.google.android.gms:play-services-location:9.0.2'
+    compile 'com.google.android.gms:play-services-maps:9.0.2'
+    compile 'com.android.support:appcompat-v7:23.1.'
     compile 'com.android.support:design:23.4.0'
 }
 

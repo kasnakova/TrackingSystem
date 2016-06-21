@@ -20,8 +20,10 @@
 
     <TextView
         android:id="@+id/textViewEmail"
+        android:background="@android:color/transparent"
         android:layout_width="wrap_content"
+        android:paddingLeft="10dp"
         android:layout_height="wrap_content"
-        android:text="" />
+        android:text="mari" />
 
 </LinearLayout>

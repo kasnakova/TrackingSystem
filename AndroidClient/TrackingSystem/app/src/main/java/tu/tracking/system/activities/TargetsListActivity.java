@@ -17,26 +17,22 @@
 package tu.tracking.system.activities;
 
 import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GoogleApiAvailability;
+import java.util.List;
 
 import tu.tracking.system.R;
-import tu.tracking.system.services.SpecialSoftwareIntentService;
-import tu.tracking.system.utilities.Constants;
+import tu.tracking.system.adapters.TargetAdapter;
+import tu.tracking.system.http.HttpResult;
+import tu.tracking.system.http.TrackingSystemHttpRequester;
+import tu.tracking.system.interfaces.ITrackingSystemHttpResponse;
+import tu.tracking.system.models.TargetModel;
 
-public class TargetsListActivity extends AppCompatActivity {
+public class TargetsListActivity extends AppCompatActivity implements ITrackingSystemHttpResponse {
 
     private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
     private static final String TAG = "TheMainActivity";
@@ -45,79 +41,22 @@ public class TargetsListActivity extends AppCompatActivity {
     private ProgressBar mRegistrationProgressBar;
     private TextView mInformationTextView;
     private boolean isReceiverRegistered;
+    private ListView listViewTargets;
+    private TargetsListActivity context = this;
+    private TargetAdapter adapter;
+    private TrackingSystemHttpRequester myDiaryHttpRequester;
+    private List<TargetModel> notes;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_targets_list);
-
-        mRegistrationProgressBar = (ProgressBar) findViewById(R.id.registrationProgressBar);
-        mRegistrationBroadcastReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                mRegistrationProgressBar.setVisibility(ProgressBar.GONE);
-                SharedPreferences sharedPreferences =
-                        PreferenceManager.getDefaultSharedPreferences(context);
-                boolean sentToken = sharedPreferences
-                        .getBoolean(Constants.SENT_TOKEN_TO_SERVER, false);
-                if (sentToken) {
-                    mInformationTextView.setText(getString(R.string.gcm_send_message));
-                } else {
-                    mInformationTextView.setText(getString(R.string.token_error_message));
-                }
-            }
-        };
-        mInformationTextView = (TextView) findViewById(R.id.informationTextView);
-
-        // Registering BroadcastReceiver
-        registerReceiver();
-
-        if (checkPlayServices()) {
-            // Start IntentService to register this application with GCM.
-            Intent intent = new Intent(this, SpecialSoftwareIntentService.class);
-            startService(intent);
-        }
+        listViewTargets = (ListView) findViewById(R.id.listViewTargets);
+        myDiaryHttpRequester = new TrackingSystemHttpRequester(this);
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        registerReceiver();
+    public void trackingSystemProcessFinish(HttpResult result) {
+        
     }
-
-    @Override
-    protected void onPause() {
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mRegistrationBroadcastReceiver);
-        isReceiverRegistered = false;
-        super.onPause();
-    }
-
-    private void registerReceiver(){
-        if(!isReceiverRegistered) {
-            LocalBroadcastManager.getInstance(this).registerReceiver(mRegistrationBroadcastReceiver,
-                    new IntentFilter(Constants.REGISTRATION_COMPLETE));
-            isReceiverRegistered = true;
-        }
-    }
-    /**
-     * Check the device to make sure it has the Google Play Services APK. If
-     * it doesn't, display a dialog that allows users to download the APK from
-     * the Google Play Store or enable it in the device's system settings.
-     */
-    private boolean checkPlayServices() {
-        GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
-        int resultCode = apiAvailability.isGooglePlayServicesAvailable(this);
-        if (resultCode != ConnectionResult.SUCCESS) {
-            if (apiAvailability.isUserResolvableError(resultCode)) {
-                apiAvailability.getErrorDialog(this, resultCode, PLAY_SERVICES_RESOLUTION_REQUEST)
-                        .show();
-            } else {
-                Log.i(TAG, "This device is not supported.");
-                finish();
-            }
-            return false;
-        }
-        return true;
-    }
-
 }
