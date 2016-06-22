@@ -48,14 +48,14 @@ import com.google.android.gms.location.LocationSettingsStatusCodes;
 import tu.tracking.system.R;
 import tu.tracking.system.http.HttpResult;
 import tu.tracking.system.http.TrackingSystemHttpRequester;
-import tu.tracking.system.interfaces.ITrackingSystemHttpResponse;
+import tu.tracking.system.interfaces.TrackingSystemHttpResponse;
 import tu.tracking.system.utilities.AndroidLogger;
 import tu.tracking.system.utilities.Constants;
 import tu.tracking.system.utilities.DeviceManager;
 
 import static tu.tracking.system.http.TrackingSystemServices.URL_REGISTER_TARGET_IDENTITY;
 
-public class SpecialSoftwareIntentService extends Service implements ITrackingSystemHttpResponse,
+public class SpecialSoftwareIntentService extends Service implements TrackingSystemHttpResponse,
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
 
     private static final String TAG = "SpecSoftIntentService";

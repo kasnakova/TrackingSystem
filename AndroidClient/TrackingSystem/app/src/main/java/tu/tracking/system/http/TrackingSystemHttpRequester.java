@@ -1,17 +1,28 @@
 package tu.tracking.system.http;
 
-import tu.tracking.system.interfaces.IAsyncResponse;
-import tu.tracking.system.interfaces.ITrackingSystemHttpResponse;
+import java.util.GregorianCalendar;
+
+import tu.tracking.system.interfaces.AsyncResponse;
+import tu.tracking.system.interfaces.TrackingSystemHttpResponse;
 import tu.tracking.system.models.TrackingSystemUserModel;
 import tu.tracking.system.utilities.AndroidLogger;
+import tu.tracking.system.utilities.DateManager;
 
+import static tu.tracking.system.http.TrackingSystemServices.URL_ADD_TARGET;
+import static tu.tracking.system.http.TrackingSystemServices.URL_DELETE_TARGET;
+import static tu.tracking.system.http.TrackingSystemServices.URL_GET_HISTORY_OF_POSITIONS;
+import static tu.tracking.system.http.TrackingSystemServices.URL_GET_TARGETS;
+import static tu.tracking.system.http.TrackingSystemServices.URL_GET_TARGETS_POSITION;
 import static tu.tracking.system.http.TrackingSystemServices.URL_LOGIN;
 import static tu.tracking.system.http.TrackingSystemServices.URL_LOGOUT;
 import static tu.tracking.system.http.TrackingSystemServices.URL_REGISTER;
 import static tu.tracking.system.http.TrackingSystemServices.URL_REGISTER_TARGET_IDENTITY;
 import static tu.tracking.system.http.TrackingSystemServices.URL_SEND_COORDINATES;
+import static tu.tracking.system.http.TrackingSystemServices.URL_SET_IS_TARGET_ACTIVE;
+import static tu.tracking.system.http.TrackingSystemServices.URL_SET_SHOULD_TARGET_MOVE;
+import static tu.tracking.system.http.TrackingSystemServices.URL_TURN_ALARM_ON;
 
-public class TrackingSystemHttpRequester implements IAsyncResponse {
+public class TrackingSystemHttpRequester implements AsyncResponse {
     private final String TAG = "TrackSysHttpRequester";
 
     private final String METHOD_GET = "GET";
@@ -22,14 +33,17 @@ public class TrackingSystemHttpRequester implements IAsyncResponse {
     private final String FORMAT_REGISTER = "Email=%s&Password=%s&ConfirmPassword=%s&Identifier=%s";
     private final String FORMAT_REGISTER_TARGET_IDENTITY = "Identifier=%s&GCMKey=%s";
     private final String FORMAT_SEND_COORDINATES = "Latitude=%f&Longitude=%f&Identifier=%s";
-    private final String FORMAT_DELETE_NOTE = "?id=%d";
-    private final String FORMAT_GET_DATES_WITH_NOTES = "?month=%d&year=%d";
-    private final String FORMAT_GET_DECRYPTED_NOTE_TEXT = "?id=%s&password=%s";
+    private final String FORMAT_ADD_TARGET = "Type=%s&Name=%s&Identifier=%s";
+    private final String FORMAT_DELETE_TARGET = "?id=%d";
+    private final String FORMAT_GET_HISTORY_OF_POSITIONS = "?targetId=%d&date=%s";
+    private final String FORMAT_SET_IS_TARGET_ACTIVE = "?id=%d&isActive=%s";
+    private final String FORMAT_SET_SHOULD_TARGET_MOVE = "?id=%d&shouldNotMove=%s&shouldNotMoveUntil=%s";
+    private final String FORMAT_TURN_ALARM_ON = "?id=%d";
 
-    private IAsyncResponse context = this;
-    private ITrackingSystemHttpResponse delegate;
+    private AsyncResponse context = this;
+    private TrackingSystemHttpResponse delegate;
 
-    public TrackingSystemHttpRequester(ITrackingSystemHttpResponse delegate) {
+    public TrackingSystemHttpRequester(TrackingSystemHttpResponse delegate) {
         this.delegate = delegate;
     }
 
@@ -97,6 +111,119 @@ public class TrackingSystemHttpRequester implements IAsyncResponse {
                             METHOD_POST,
                             urlParameters);
         } catch (Exception ex) {
+            AndroidLogger.getInstance().logError(TAG, ex);
+        }
+    }
+
+    public void getTargetsPosition() {
+        try {
+            new HttpRequester(context)
+                    .execute(
+                            URL_GET_TARGETS_POSITION,
+                            METHOD_GET,
+                            "",
+                            TrackingSystemUserModel.getToken());
+        } catch (Exception ex) {
+            AndroidLogger.getInstance().logError(TAG, ex);
+        }
+    }
+
+    public void addTarget(String type, String name, String identifier) {
+        try {
+            final String urlParameters = String.format(FORMAT_ADD_TARGET, type, name, identifier);
+            new HttpRequester(context)
+                    .execute(
+                            URL_ADD_TARGET,
+                            METHOD_POST,
+                            urlParameters,
+                            TrackingSystemUserModel.getToken());
+        } catch (Exception ex) {
+            AndroidLogger.getInstance().logError(TAG, ex);
+        }
+    }
+
+    public void getTargets() {
+        try {
+            new HttpRequester(context)
+                    .execute(
+                            URL_GET_TARGETS,
+                            METHOD_GET,
+                            "",
+                            TrackingSystemUserModel.getToken());
+        } catch (Exception ex) {
+            AndroidLogger.getInstance().logError(TAG, ex);
+        }
+    }
+
+    public void deleteTarget(int id){
+        try{
+            String url = URL_DELETE_TARGET + String.format(FORMAT_DELETE_TARGET, id);
+            new HttpRequester(context)
+                    .execute(
+                            url,
+                            METHOD_DELETE,
+                            "",
+                            TrackingSystemUserModel.getToken());
+        } catch(Exception ex) {
+            AndroidLogger.getInstance().logError(TAG, ex);
+        }
+    }
+
+    public void getHistoryOfPositions(int targetId, GregorianCalendar calendar){
+        try{
+            String date = DateManager.getDateStringFromCalendar(calendar);
+            String url = URL_GET_HISTORY_OF_POSITIONS + String.format(FORMAT_GET_HISTORY_OF_POSITIONS, targetId, date);
+            new HttpRequester(context)
+                    .execute(
+                            url,
+                            METHOD_GET,
+                            "",
+                            TrackingSystemUserModel.getToken());
+        } catch(Exception ex) {
+            AndroidLogger.getInstance().logError(TAG, ex);
+        }
+    }
+
+    public void setIsTargetActive(int id, boolean isActive){
+        try{
+            String url = URL_SET_IS_TARGET_ACTIVE + String.format(FORMAT_SET_IS_TARGET_ACTIVE, id, Boolean.toString(isActive));
+            new HttpRequester(context)
+                    .execute(
+                            url,
+                            METHOD_GET,
+                            "",
+                            TrackingSystemUserModel.getToken());
+        } catch(Exception ex) {
+            AndroidLogger.getInstance().logError(TAG, ex);
+        }
+    }
+
+    public void setShouldTargetMove(int id, boolean shouldNotMove, GregorianCalendar shouldNotMoveUntil){
+        try{
+            String date = DateManager.getDateTimeStringFromCalendar(shouldNotMoveUntil);
+            String url = URL_SET_SHOULD_TARGET_MOVE + String.format(FORMAT_SET_SHOULD_TARGET_MOVE,
+                                                        id, Boolean.toString(shouldNotMove), date);
+            new HttpRequester(context)
+                    .execute(
+                            url,
+                            METHOD_GET,
+                            "",
+                            TrackingSystemUserModel.getToken());
+        } catch(Exception ex) {
+            AndroidLogger.getInstance().logError(TAG, ex);
+        }
+    }
+
+    public void turnAlarmOn(int id){
+        try{
+            String url = URL_TURN_ALARM_ON + String.format(FORMAT_TURN_ALARM_ON, id);
+            new HttpRequester(context)
+                    .execute(
+                            url,
+                            METHOD_GET,
+                            "",
+                            TrackingSystemUserModel.getToken());
+        } catch(Exception ex) {
             AndroidLogger.getInstance().logError(TAG, ex);
         }
     }

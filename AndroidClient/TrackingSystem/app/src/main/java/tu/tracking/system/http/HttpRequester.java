@@ -12,17 +12,17 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import tu.tracking.system.interfaces.IAsyncResponse;
+import tu.tracking.system.interfaces.AsyncResponse;
 import tu.tracking.system.utilities.AndroidLogger;
 
 public class HttpRequester extends AsyncTask<String, Void, HttpResult> {
     private final String USER_AGENT = "Mozilla/5.0";
     private final String TAG = "HttpRequester";
     private final int CONNECTION_TIMEOUT = 5000;
-    private IAsyncResponse delegate;
+    private AsyncResponse delegate;
     private HttpURLConnection connection;
 
-    public HttpRequester(IAsyncResponse delegate) {
+    public HttpRequester(AsyncResponse delegate) {
         this.delegate = delegate;
     }
 

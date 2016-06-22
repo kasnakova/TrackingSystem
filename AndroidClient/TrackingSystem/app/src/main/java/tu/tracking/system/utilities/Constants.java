@@ -19,6 +19,7 @@ public class Constants {
 
     public static final String TITLE_LOGOUT = "Logout";
     public static final String TITLE_PROBLEM_WITH_LOGIN = "Problem with login";
+    public static final String TITLE_PROBLEM_OCCURRED = "Problem occurred";
     public static final String TITLE_NO_CONNECTION = "No connection to internet or server";
     public static final String MESSAGE_PROBLEM_OCCURRED = "Please check your internet connection or whether the server is running";
     public static final String MESSAGE_DELETE_REMINDER= "Do you want to delete this reminder?";
@@ -27,11 +28,13 @@ public class Constants {
     public static final String MESSAGE_EMAIL_CANNOT_BE_EMPTY = "Email can't be empty!";
     public static final String MESSAGE_PASSWORD_CANNOT_BE_EMPTY= "Password can't be empty!";
     public static final String MESSAGE_INVALID_EMAIL= "Enter a valid email address!!";
-    public static final String MESSAGE_PROBLEM_DELETING_NOTE= "Sorry, but we couldn't delete your note!";
+    public static final String MESSAGE_PROBLEM_DELETING_TARGET = "Sorry, but we couldn't delete your target!";
     public static final String MESSAGE_NAME_CANNOT_BE_EMPTY= "Name can't be empty!";
     public static final String MESSAGE_PASSWORD_CONFIRM_NOT_MATCH = "The password confirmation doesn't match!";
     public static final String MESSAGE_PASSWORD_LENGTH = "The password must be at least %d characters long!";
     public static final String MESSAGE_LOGOUT = "Are you sure you want to log out?";
+    public static final String TITLE_INVALID_TIME = "Invalid time";
+    public static final String MESSAGE_INVALID_TIME = "Your reminder must be after the current time!";
 
     public static final String JSON_ACCESS_TOKEN = "access_token";
     public static final String JSON_EMAIL = "userName";

@@ -4,13 +4,13 @@ package tu.tracking.system.utilities;
  * Created by Liza on 18.6.2016 г..
  */
 
-import java.util.GregorianCalendar;
-
 import android.widget.DatePicker;
 import android.widget.TimePicker;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 
 public class DateManager {
     private static final String TAG = "DateManager";
@@ -94,6 +94,17 @@ public class DateManager {
         return numbers;
     }
 
+    public static int[] getDateInNumbersFromGregorianCalendar(GregorianCalendar date) {
+        int[] numbers = new int[3];
+        //day
+        numbers[0] = date.get(Calendar.DAY_OF_MONTH);
+        //month
+        numbers[1] = date.get(Calendar.MONTH);
+        //year
+        numbers[2] = date.get(Calendar.YEAR);
+        return numbers;
+    }
+
     public static GregorianCalendar getGregorianCalendarFromNumbers(int day, int month, int year, int hour, int minutes) {
         String date = year + "-" + month + "-" + day + "T" + hour + ":" + minutes + ":00";
         return DateManager.getGregorianCalendarFromString(date);
@@ -113,6 +124,10 @@ public class DateManager {
         }
 
         return milis;
+    }
+
+    public static long getTimeInMilisFromGregorianCalendar(GregorianCalendar date) {
+        return date.getTimeInMillis();
     }
 
     public static boolean isDateValid(GregorianCalendar date, DatePicker datePicker, TimePicker timePicker) {
