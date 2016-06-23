@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Point;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.NavigationView;
@@ -24,11 +23,12 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.maps.android.clustering.Cluster;
+import com.google.maps.android.clustering.ClusterItem;
+import com.google.maps.android.clustering.ClusterManager;
 
 import java.util.GregorianCalendar;
 import java.util.List;
@@ -52,7 +52,7 @@ import tu.tracking.system.utilities.ProgressBarManager;
 import tu.tracking.system.utilities.SpecialSoftwareManager;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, TrackingSystemHttpResponse, ChangeHistoryDateDialogListener {
+        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, ClusterManager.OnClusterClickListener<PositionModel>, TrackingSystemHttpResponse, ChangeHistoryDateDialogListener {
     private static final String TAG = "TheMainActivity";
     private final Activity context = this;
     private TextView textViewHostoryDate;
@@ -62,8 +62,9 @@ public class MainActivity extends AppCompatActivity
     private List<PositionModel> positions;
     private boolean isHistory;
     private int targetId = 0;
-    private String historyDate;
+    private GregorianCalendar historyDate;
     private GoogleMap mMap;
+    private ClusterManager<PositionModel> clusterManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -115,7 +116,6 @@ public class MainActivity extends AppCompatActivity
     protected void onRestart() {
         super.onRestart();
         ProgressBarManager.showProgressBar(this);
-        mMap.clear();
         areTargetsPinned = false;
         getPositions();
     }
@@ -155,8 +155,8 @@ public class MainActivity extends AppCompatActivity
     private void getPositions(){
         ProgressBarManager.showProgressBar(this);
         if (isHistory) {
-            historyDate =  DateManager.getDateStringFromCalendar(new GregorianCalendar());
-            httpRequester.getHistoryOfPositions(targetId,historyDate);
+            historyDate = new GregorianCalendar();
+            httpRequester.getHistoryOfPositions(targetId, historyDate);
         } else {
             httpRequester.getTargetsPosition();
         }
@@ -192,7 +192,7 @@ public class MainActivity extends AppCompatActivity
         PolylineOptions options = null;
         if (isHistory) {
             options = new PolylineOptions();
-            options.geodesic(true).color(R.color.dark_blue);//TODO not sure about the color
+            options.geodesic(true).color(Constants.DARK_BLUE);
         }
 
         for (PositionModel position : positions) {
@@ -201,22 +201,22 @@ public class MainActivity extends AppCompatActivity
                 options.add(coordinates);
             }
 
+            clusterManager.addItem(position);
+//            Marker marker = mMap.addMarker(new MarkerOptions()
+//                    .position(coordinates)
+//                    .title(position.getLabel())
+//                    .icon(BitmapDescriptorFactory.fromResource(R.mipmap.radar))
+//            );
 
-            Marker marker = mMap.addMarker(new MarkerOptions()
-                    .position(coordinates)
-                    .title(position.getLabel())
-                    .icon(BitmapDescriptorFactory.fromResource(R.mipmap.radar))
-            );
-
-            marker.showInfoWindow();
+            //marker.showInfoWindow();
         }
 
+        clusterManager.cluster();
         if (isHistory) {
             mMap.addPolyline(options);
         }
 
-        Point p = new Point((int)coordinates.latitude, (int)coordinates.longitude);
-        mMap.moveCamera(CameraUpdateFactory.zoomBy(5, p));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(coordinates.latitude, coordinates.longitude), 9.5f));
     }
 
     @Override
@@ -281,7 +281,12 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-
+        clusterManager = new ClusterManager<PositionModel>(this, mMap);
+        clusterManager.setRenderer(new PositionRenderer(this, mMap, clusterManager));
+        mMap.setOnCameraChangeListener(clusterManager);
+        mMap.setOnMarkerClickListener(clusterManager);
+        mMap.setOnInfoWindowClickListener(clusterManager);
+        clusterManager.setOnClusterClickListener(this);
         if (positions != null) {
             synchronized (syncObj) {
                 if (!areTargetsPinned) {
@@ -293,9 +298,37 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onChangeHistoryDateDialogDone(String date) {
+    public boolean onClusterClick(Cluster<PositionModel> cluster) {
+        // Show a toast with some info when the cluster is clicked.
+        String firstName = cluster.getItems().iterator().next().getLabel();
+        FeedbackManager.makeToast(this, cluster.getSize() + " (including " + firstName + ")", Toast.LENGTH_SHORT);
+
+        // Zoom in the cluster. Need to create LatLngBounds and including all the cluster items
+        // inside of bounds, then animate to center of the bounds.
+
+        // Create the builder to collect all essential cluster items for the bounds.
+        LatLngBounds.Builder builder = LatLngBounds.builder();
+        for (ClusterItem item : cluster.getItems()) {
+            builder.include(item.getPosition());
+        }
+        // Get the LatLngBounds
+        final LatLngBounds bounds = builder.build();
+
+        // Animate camera to the bounds
+        try {
+            mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return true;
+    }
+
+    @Override
+    public void onChangeHistoryDateDialogDone(GregorianCalendar date) {
         historyDate = date;
         ProgressBarManager.showProgressBar(this);
+        areTargetsPinned = false;
         httpRequester.getHistoryOfPositions(targetId, date);
     }
 
@@ -317,6 +350,8 @@ public class MainActivity extends AppCompatActivity
                 case TrackingSystemServices.URL_GET_TARGETS_POSITION:
                 case TrackingSystemServices.URL_GET_HISTORY_OF_POSITIONS:
                     if (result.getSuccess()) {
+                        mMap.clear();
+                        clusterManager.clearItems();
                         positions = JsonManager.makePositionsFromJson(result.getData(), isHistory);
                         if(positions.size() > 0){
                             if (mMap != null) {
@@ -332,10 +367,11 @@ public class MainActivity extends AppCompatActivity
                         }
 
                         if(isHistory){
-                            textViewHostoryDate.setText(historyDate);
+                            textViewHostoryDate.setText(DateManager.getBGDateStringFromCalendar(historyDate));
                         }
                     } else {
                         DialogManager.makeAlert(this, Constants.TITLE_PROBLEM_OCCURRED, "Sorry, we couldn't retrieve coordinates.");
+                        AndroidLogger.getInstance().logMessage(TAG, "Didn't get history because: " + result.getData());
                     }
                     break;
                 default:

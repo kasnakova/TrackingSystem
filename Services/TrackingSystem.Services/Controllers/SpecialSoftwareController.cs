@@ -36,7 +36,10 @@
 
             if(existingIdentifier != null)
             {
-                return BadRequest();
+                existingIdentifier.GCMKey = targetIdentity.GCMKey;
+                data.TargetIdentifiers.Update(existingIdentifier);
+                data.SaveChanges();
+                return Ok();
             }
 
             var targetIdentifier = new TargetIdentity()

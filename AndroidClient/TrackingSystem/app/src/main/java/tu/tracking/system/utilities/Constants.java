@@ -9,6 +9,7 @@ public class Constants {
     public static final int MAX_ADD_TARGET_FIELDS_LENGTH = 50;
     public static final int MIN_IDENTIFIER_LENGTH = 10;
     public static final int MAX_IDENTIFIER_LENGTH = 255;
+    public static final int DARK_BLUE = 0xFF1C2F40;
 
     public static final String CHANGE_LOCATION_INTERVAL = "changeLocationInterval";
     public static final String LOCATION_INTERVAL = "locationInterval";

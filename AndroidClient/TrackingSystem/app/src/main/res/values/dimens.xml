@@ -7,4 +7,6 @@
     <dimen name="nav_header_height">160dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="margin_bottom_buttons">20dp</dimen>
+    <dimen name="custom_profile_image">20dp</dimen>
+    <dimen name="custom_profile_padding">2dp</dimen>
 </resources>
