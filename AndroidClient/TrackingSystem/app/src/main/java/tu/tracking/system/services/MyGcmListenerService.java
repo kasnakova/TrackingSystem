@@ -25,7 +25,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
-import android.util.Log;
+import android.support.v4.content.LocalBroadcastManager;
 
 import com.google.android.gms.gcm.GcmListenerService;
 
@@ -46,24 +46,33 @@ public class MyGcmListenerService extends GcmListenerService {
     public void onMessageReceived(String from, Bundle data) {
         PushMessageType type = PushMessageType.valueOf(data.getString("type"));
         String message = data.getString("message");
-        Log.d(TAG, "From: " + from);
-        Log.d(TAG, "Message: " + message);
-        Log.d(TAG, "Message: " + message);
-
+        AndroidLogger.getInstance().logMessage(TAG, "From: " + from);
+        AndroidLogger.getInstance().logMessage(TAG, "Type: " + type);
+        AndroidLogger.getInstance().logMessage(TAG, "Message: " + message);
+        String logMessage = "";
         switch (type) {
             case SetIsTargetActive:
+                logMessage= "Device is set to be active: " + message;
                 setIsTargetActive(Boolean.valueOf(message));
                 break;
             case TargetMovingWhenShouldNot:
+                logMessage= "Device should not move: " + message;
                 sendNotification(message);
                 break;
             case TurnAlarmOn:
-                turnAlarmOn();
+                logMessage= "Alarm turned on by: " + message;
+                turnAlarmOn(message);
+                break;
+            case ChangeLocationInterval:
+                logMessage= "Change location interval to: " + message;
+                changeLocationInterval(Long.parseLong(message));
                 break;
             default:
                 AndroidLogger.getInstance().logMessage(TAG, String.format("Unknown GCM Message. From: %s; Type: %s; Message: %s", from, type.toString(), message));
                 break;
         }
+
+        AndroidLogger.getInstance().logMessage(TAG, logMessage);
     }
 
     private void setIsTargetActive(boolean isActive){
@@ -77,10 +86,11 @@ public class MyGcmListenerService extends GcmListenerService {
         }
     }
 
-    private void turnAlarmOn() {
+    private void turnAlarmOn(String userName) {
         AlarmManager.start(getApplicationContext());
         Intent stopAlarmIntent = new Intent(this, StopAlarmActivity.class);
         stopAlarmIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        stopAlarmIntent.putExtra("userName", userName);
         startActivity(stopAlarmIntent);
     }
 
@@ -104,5 +114,13 @@ public class MyGcmListenerService extends GcmListenerService {
 
         notificationManager.notify(notificationId, notificationBuilder.build());
         notificationId++;
+    }
+
+    private void changeLocationInterval(long interval){
+        long fastestInterval = interval - (long) (0.2 * interval);
+        PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putLong(Constants.LOCATION_INTERVAL, interval).apply();
+        PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putLong(Constants.LOCATION_FASTEST_INTERVAL, fastestInterval).apply();
+        Intent intent = new Intent(Constants.CHANGE_LOCATION_INTERVAL);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 }

@@ -2,9 +2,17 @@ package tu.tracking.system.utilities;
 
 public class Constants {
     public static final int MAX_LOG_FILES = 10;
-    public static final int INTERVAL_LOCATION_REQUEST = 10000;
-    public static final int FASTEST_INTERVAL_LOCATION_REQUEST = 5000;
+    public static final long INTERVAL_LOCATION_REQUEST = 30000;
+    public static final long FASTEST_INTERVAL_LOCATION_REQUEST = INTERVAL_LOCATION_REQUEST - (long)(0.2 * INTERVAL_LOCATION_REQUEST);
     public static final int MIN_PASSWORD_LENGTH = 6;
+    public static final int MIN_ADD_TARGET_FIELDS_LENGTH = 2;
+    public static final int MAX_ADD_TARGET_FIELDS_LENGTH = 50;
+    public static final int MIN_IDENTIFIER_LENGTH = 10;
+    public static final int MAX_IDENTIFIER_LENGTH = 255;
+
+    public static final String CHANGE_LOCATION_INTERVAL = "changeLocationInterval";
+    public static final String LOCATION_INTERVAL = "locationInterval";
+    public static final String LOCATION_FASTEST_INTERVAL = "locationFastestInterval";
 
     public static final String EMPTY_STRING = "";
     public static final String LOG_PATH = "/TrackingSystem/Logs";
@@ -24,7 +32,7 @@ public class Constants {
     public static final String MESSAGE_PROBLEM_OCCURRED = "Please check your internet connection or whether the server is running";
     public static final String MESSAGE_DELETE_REMINDER= "Do you want to delete this reminder?";
     public static final String MESSAGE_DELETE_REMINDERS = "Do you want to delete all reminders?";
-    public static final String MESSAGE_NO_CONNECTION = "Please check your connection. You will be redirected to the login screen";
+    public static final String MESSAGE_NO_CONNECTION = "Please check your connection. You will be redirected to the help screen";
     public static final String MESSAGE_EMAIL_CANNOT_BE_EMPTY = "Email can't be empty!";
     public static final String MESSAGE_PASSWORD_CANNOT_BE_EMPTY= "Password can't be empty!";
     public static final String MESSAGE_INVALID_EMAIL= "Enter a valid email address!!";
@@ -40,4 +48,8 @@ public class Constants {
     public static final String JSON_EMAIL = "userName";
     public static final String JSON_ERROR_DESCRIPTION = "error_description";
     public static final String JSON_MESSAGE = "Message";
+
+    private static void deleteThisBeforeDefense(){
+        //TODO remove hard-coded identfier from add view
+    }
 }

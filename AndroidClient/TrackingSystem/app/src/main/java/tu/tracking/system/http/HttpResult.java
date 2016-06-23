@@ -19,7 +19,8 @@ public class HttpResult {
     }
 
     public String getService(){
-        return this.service;
+        int index = service.indexOf('?');
+        return index == -1 ? service : service.substring(0, index);
     }
 
     public String getData(){

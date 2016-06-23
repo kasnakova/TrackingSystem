@@ -169,9 +169,8 @@ public class TrackingSystemHttpRequester implements AsyncResponse {
         }
     }
 
-    public void getHistoryOfPositions(int targetId, GregorianCalendar calendar){
+    public void getHistoryOfPositions(int targetId, String date){
         try{
-            String date = DateManager.getDateStringFromCalendar(calendar);
             String url = URL_GET_HISTORY_OF_POSITIONS + String.format(FORMAT_GET_HISTORY_OF_POSITIONS, targetId, date);
             new HttpRequester(context)
                     .execute(

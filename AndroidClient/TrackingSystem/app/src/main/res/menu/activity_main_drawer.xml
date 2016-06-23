@@ -2,27 +2,27 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <group android:checkableBehavior="single">
-        <item
-            android:id="@+id/nav_home"
-            android:icon="@drawable/ic_menu_map"
-            android:title="Home" />
-        <item
-            android:id="@+id/nav_list"
-            android:icon="@drawable/ic_menu_list"
-            android:title="List" />
-    </group>
-    <group android:checkableBehavior="single">
+        <item android:title="Tracking System">
+            <item
+                android:id="@+id/nav_home"
+                android:icon="@drawable/ic_menu_map"
+                android:title="Home" />
+            <item
+                android:id="@+id/nav_list"
+                android:icon="@drawable/ic_menu_list"
+                android:title="Targets" />
+            <item
+                android:id="@+id/nav_logout"
+                android:icon="@drawable/ic_menu_logout"
+                android:title="Logout" />
+        </item>
         <item
             android:id="@+id/nav_help"
             android:icon="@drawable/ic_menu_help"
             android:title="Help" />
-        <item
-            android:id="@+id/nav_logout"
-            android:icon="@drawable/ic_menu_logout"
-            android:title="Logout" />
     </group>
 
-    <item android:title="Communicate">
+    <item android:title="Tracking me">
         <menu>
             <item
                 android:id="@+id/nav_identify"

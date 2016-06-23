@@ -110,6 +110,25 @@ public class DateManager {
         return DateManager.getGregorianCalendarFromString(date);
     }
 
+    public static String getDateStringFromNumbers(int day, int month, int year){
+        StringBuilder sb = new StringBuilder();
+        String delimiter = "/";
+        if(day < 10){
+            sb.append("0");
+        }
+
+        sb.append(day);
+        sb.append(delimiter);
+        if(month < 10){
+            sb.append("0");
+        }
+
+        sb.append(month);
+        sb.append(delimiter);
+        sb.append(year);
+        return sb.toString();
+    }
+
     public static long getTimeInMilisFromString(String date) {
         long milis = 0;
         try {

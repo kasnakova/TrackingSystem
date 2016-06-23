@@ -35,7 +35,7 @@ public class JsonManager {
                 JSONObject positionObj = JsonManager.makeJson(jsonArray.get(i).toString());
                 double latitude = positionObj.getDouble("Latitude");
                 double longitude = positionObj.getDouble("Longitude");
-                String label = positionObj.getString(isHistory ? "DateTime" : "TargetName");
+                String label = positionObj.getString(isHistory ? "Time" : "TargetName");
                 PositionModel position = new PositionModel(latitude, longitude, label);
                 positions.add(position);
             }

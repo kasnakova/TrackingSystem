@@ -1,23 +1,19 @@
 package tu.tracking.system.activities;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.telephony.TelephonyManager;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -30,6 +26,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 
@@ -47,23 +44,25 @@ import tu.tracking.system.models.PositionModel;
 import tu.tracking.system.models.TrackingSystemUserModel;
 import tu.tracking.system.utilities.AndroidLogger;
 import tu.tracking.system.utilities.Constants;
+import tu.tracking.system.utilities.DateManager;
 import tu.tracking.system.utilities.DialogManager;
+import tu.tracking.system.utilities.FeedbackManager;
 import tu.tracking.system.utilities.JsonManager;
 import tu.tracking.system.utilities.ProgressBarManager;
 import tu.tracking.system.utilities.SpecialSoftwareManager;
-import tu.tracking.system.utilities.ToastManager;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, TrackingSystemHttpResponse, ChangeHistoryDateDialogListener {
     private static final String TAG = "TheMainActivity";
     private final Activity context = this;
+    private TextView textViewHostoryDate;
     private TrackingSystemHttpRequester httpRequester;
     private Object syncObj = new Object();
     private boolean areTargetsPinned = false;
     private List<PositionModel> positions;
     private boolean isHistory;
     private int targetId = 0;
-
+    private String historyDate;
     private GoogleMap mMap;
 
     @Override
@@ -71,6 +70,7 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        textViewHostoryDate = (TextView) findViewById(R.id.textViewHistoryDate);
         Bundle extras = getIntent().getExtras();
         if(extras != null) {
             targetId = extras.getInt("id");
@@ -78,62 +78,47 @@ public class MainActivity extends AppCompatActivity
 
         if (targetId == 0) {
             isHistory = false;
+            textViewHostoryDate.setVisibility(View.INVISIBLE);
         } else {
             isHistory = true;
             toolbar.setTitle(extras.getString("name"));
-            //TODO: display and the date somewhere
+            textViewHostoryDate.setVisibility(View.VISIBLE);
         }
 
         setSupportActionBar(toolbar);
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.setDrawerListener(toggle);
-        toggle.syncState();
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
+        if(isHistory){
+            drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        } else {
+            ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                    this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+            drawer.setDrawerListener(toggle);
+            toggle.syncState();
+            NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+            navigationView.setNavigationItemSelectedListener(this);
+        }
+
+        //Add Google Map
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
+
+        //Start service
+        startSpecialSoftwareService();
 
         httpRequester = new TrackingSystemHttpRequester(this);
         checkIfLogged();
     }
 
-//    @Override
-//    protected void onPause() {
-//        Log.d(TAG, "onPause before super");
-//        super.onPause();
-//        Log.d(TAG, "onPause after super");
-//    }
-
-//    @Override
-//    protected void onStop() {
-//        Log.d(TAG, "onStop before super");
-//        super.onStop();
-//        finish();
-//        Log.d(TAG, "onStop after super and finish");
-//    }
-
-//    @Override
-//    protected void onRestart() {
-//        Log.d(TAG, "onRestart before super");
-//        super.onRestart();
-//        Log.d(TAG, "onRestart after super");
-//    }
-//
-//    @Override
-//    protected void onResume() {
-//        Log.d(TAG, "onResume before super");
-//        super.onResume();
-//        Log.d(TAG, "onResume after super");
-//    }
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        ProgressBarManager.showProgressBar(this);
+        mMap.clear();
+        areTargetsPinned = false;
+        getPositions();
+    }
 
     private void startSpecialSoftwareService() {
         if (SpecialSoftwareManager.checkPlayServices(getApplicationContext())) {
@@ -145,7 +130,7 @@ public class MainActivity extends AppCompatActivity
             }
         } else {
             AndroidLogger.getInstance().logMessage(TAG, "Unable to start Special Software Service from MainActivity. Exiting app");
-            Toast.makeText(this, "Please install Google Play Services", Toast.LENGTH_LONG).show();
+            FeedbackManager.makeToast(this, "Please install Google Play Services", Toast.LENGTH_LONG);
             finish();
         }
     }
@@ -163,23 +148,20 @@ public class MainActivity extends AppCompatActivity
             TextView txtEmail = (TextView) v.findViewById(R.id.textViewEmail);
             String email = sharedPreferences.getString(Constants.EMAIL, "Welcome");
             txtEmail.setText(email);
-
-            //Add Google Map
-            SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                    .findFragmentById(R.id.map);
-            mapFragment.getMapAsync(this);
-
-            //Start service
-            startSpecialSoftwareService();
-
-            ProgressBarManager.showProgressBar(this);
-            if (isHistory) {
-                httpRequester.getHistoryOfPositions(targetId, new GregorianCalendar());
-            } else {
-                httpRequester.getTargetsPosition();
-            }
+            getPositions();
         }
     }
+
+    private void getPositions(){
+        ProgressBarManager.showProgressBar(this);
+        if (isHistory) {
+            historyDate =  DateManager.getDateStringFromCalendar(new GregorianCalendar());
+            httpRequester.getHistoryOfPositions(targetId,historyDate);
+        } else {
+            httpRequester.getTargetsPosition();
+        }
+    }
+
 
     private void loginOrRegister() {
         Intent intent = new Intent(MainActivity.this, LoginActivity.class);
@@ -210,7 +192,7 @@ public class MainActivity extends AppCompatActivity
         PolylineOptions options = null;
         if (isHistory) {
             options = new PolylineOptions();
-            options.geodesic(true);
+            options.geodesic(true).color(R.color.dark_blue);//TODO not sure about the color
         }
 
         for (PositionModel position : positions) {
@@ -219,18 +201,22 @@ public class MainActivity extends AppCompatActivity
                 options.add(coordinates);
             }
 
-            mMap.addMarker(new MarkerOptions()
+
+            Marker marker = mMap.addMarker(new MarkerOptions()
                     .position(coordinates)
                     .title(position.getLabel())
                     .icon(BitmapDescriptorFactory.fromResource(R.mipmap.radar))
             );
+
+            marker.showInfoWindow();
         }
 
         if (isHistory) {
             mMap.addPolyline(options);
         }
 
-        mMap.moveCamera(CameraUpdateFactory.zoomBy(10, new Point((int)coordinates.latitude, (int)coordinates.longitude)));
+        Point p = new Point((int)coordinates.latitude, (int)coordinates.longitude);
+        mMap.moveCamera(CameraUpdateFactory.zoomBy(5, p));
     }
 
     @Override
@@ -246,28 +232,25 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        int menuId = isHistory ? R.menu.history : R.menu.main;
+        int menuId = isHistory ? R.menu.date : R.menu.targets;
         getMenuInflater().inflate(menuId, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_add) {
-            Intent intent = new Intent(this, AddActivity.class);
+        if (id == R.id.action_targets) {
+            Intent intent = new Intent(this, TargetsListActivity.class);
             startActivity(intent);
             return true;
         } else if(id == R.id.action_date){
             ChooseHistoryDateDialog dialog = new ChooseHistoryDateDialog(this, this);
-            //TODO remove hard-coded date
-            dialog.show("Choose a date to view path", "02.06.2016");
+            dialog.show("Choose a date to view path", historyDate);
             return true;
+        } else if(id == android.R.id.home){
+            finish();
         }
 
         return super.onOptionsItemSelected(item);
@@ -278,22 +261,16 @@ public class MainActivity extends AppCompatActivity
     public boolean onNavigationItemSelected(MenuItem item) {
         int id = item.getItemId();
 
-        if (id == R.id.nav_home) {
-            if(isHistory){
-                Intent intent = new Intent(this, MainActivity.class);
-                startActivity(intent);
-                finish();
-            }
-        } else if (id == R.id.nav_list) {
+        if (id == R.id.nav_list) {
             Intent intent = new Intent(this, TargetsListActivity.class);
             startActivity(intent);
-            finish();
         } else if (id == R.id.nav_help) {
-            //TODO
+            Intent intent = new Intent(this, HelpActivity.class);
+            startActivity(intent);
         } else if (id == R.id.nav_logout) {
             logout();
         } else if (id == R.id.nav_identify) {
-            DialogManager.makeAlert(this, "Identifier", ((TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId());
+            DialogManager.identifyMe(this);
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -316,7 +293,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onChangeHistoryDateDialogDone(GregorianCalendar date) {
+    public void onChangeHistoryDateDialogDone(String date) {
+        historyDate = date;
         ProgressBarManager.showProgressBar(this);
         httpRequester.getHistoryOfPositions(targetId, date);
     }
@@ -350,7 +328,11 @@ public class MainActivity extends AppCompatActivity
                                 }
                             }
                         } else {
-                            ToastManager.makeText(this, "Nothing to pin on map", Toast.LENGTH_SHORT);
+                            FeedbackManager.makeToast(this, "Nothing to pin on map", Toast.LENGTH_SHORT);
+                        }
+
+                        if(isHistory){
+                            textViewHostoryDate.setText(historyDate);
                         }
                     } else {
                         DialogManager.makeAlert(this, Constants.TITLE_PROBLEM_OCCURRED, "Sorry, we couldn't retrieve coordinates.");
