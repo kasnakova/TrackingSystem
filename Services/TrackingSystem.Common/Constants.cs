@@ -8,7 +8,7 @@
 
         public const int MinLengthIdentifier = 10;
 
-        public const int MinLengthGCMKey = 255;
+        public const int MaxLengthGCMKey = 255;
 
         public const double CoordiatePrecision = 0.0001;
 

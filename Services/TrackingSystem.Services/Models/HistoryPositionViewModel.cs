@@ -7,7 +7,7 @@
 
     public class HistoryPositionViewModel
     {
-        public static Expression<Func<Position, HistoryPositionViewModel>> FromPosition
+        public static Func<Position, HistoryPositionViewModel> FromPosition
         {
             get
             {
@@ -15,7 +15,7 @@
                 {
                     Latitude = p.Latitude,
                     Longitude = p.Longitude,
-                    DateTime = p.DateTime
+                    Time = p.DateTime.ToString("HH:mm")
                 };
             }
         }
@@ -24,6 +24,6 @@
 
         public double Longitude { get; set; }
 
-        public DateTime DateTime { get; set; }
+        public string Time { get; set; }
     }
 }

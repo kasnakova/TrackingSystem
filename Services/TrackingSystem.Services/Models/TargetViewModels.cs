@@ -16,7 +16,9 @@
                     Id = t.TargetIdentifierId,
                     Type = t.Type,
                     Name = t.Name,
-                    Active = t.Active
+                    Active = t.Active, 
+                    ShouldNotMove = t.ShouldNotMove,
+                    ShouldNotMoveUntil = t.ShouldNotMoveUntil.HasValue ? t.ShouldNotMoveUntil.Value : DateTime.Now
                 };
             }
         }
@@ -28,5 +30,9 @@
         public string Name { get; set; }
 
         public bool Active { get; set; }
+
+        public bool ShouldNotMove { get; set; }
+
+        public DateTime ShouldNotMoveUntil { get; set; }
     }
 }

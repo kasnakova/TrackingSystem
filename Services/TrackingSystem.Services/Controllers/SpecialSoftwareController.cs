@@ -83,9 +83,13 @@
                     //send to users notification via GCM
                     foreach (var tracker in shouldNotMoveTrackers)
                     {
-                        GCMProvider.SendMessage(tracker.User.Device.GCMKey, PushMessageType.TargetMovingWhenShouldNot, tracker.Name);
-                        tracker.NotificationSent = true;
-                        data.Targets.Update(tracker);
+                        bool success = GCMProvider.SendMessage(tracker.User.Device.GCMKey, PushMessageType.TargetMovingWhenShouldNot, tracker.Name);
+
+                        if (success)
+                        {
+                            tracker.NotificationSent = true;
+                            data.Targets.Update(tracker);
+                        }
                     }
                 }
             }

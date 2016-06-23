@@ -35,7 +35,7 @@
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(ModelStatePrettifier.Prettify(ModelState));
             }
 
             var targetIdentifier = data.TargetIdentifiers.All().Where(t => t.Identifier == targetModel.Identifier).FirstOrDefault();
@@ -45,26 +45,48 @@
             }
 
             var userId = userIdProvider.GetUserId();
-            var target = data.Targets.All().Where(t => (t.TargetIdentifierId == targetIdentifier.Id) && (t.UserId == userId) && !t.Deleted).FirstOrDefault();
-            if (target != null)
+            var target = data.Targets.All().Where(t => (t.TargetIdentifierId == targetIdentifier.Id) && (t.UserId == userId)).FirstOrDefault();
+            if (target != null && !target.Deleted)
             {
                 return BadRequest("You are already tracking this target!");
             }
 
-            var newTarget = new Target()
+            bool wasTargetDeleted = false;
+            if (target == null)
             {
-                Active = true,
-                Deleted = false,
-                TargetIdentifierId = targetIdentifier.Id,
-                UserId = userId,
-                Name = targetModel.Name,
-                Type = targetModel.Type,
-                ShouldNotMove = false,
-                DateCreated = DateTime.Now,
-                DateUpdated = DateTime.Now
-            };
-            
-            data.Targets.Add(newTarget);
+                target = new Target();
+            }
+            else
+            {
+                wasTargetDeleted = true;
+            }
+
+
+            target.Active = true;
+            target.Deleted = false;
+            target.TargetIdentifierId = targetIdentifier.Id;
+            target.UserId = userId;
+            target.Name = targetModel.Name;
+            target.Type = targetModel.Type;
+            target.ShouldNotMove = false;
+            target.DateCreated = DateTime.Now;
+            target.DateUpdated = DateTime.Now;
+
+            bool success = GCMProvider.SendMessage(target.TargetIdentifier.GCMKey, PushMessageType.SetIsTargetActive, true.ToString());
+            if (!success)
+            {
+                target.Active = false;
+            }
+
+            if (wasTargetDeleted)
+            {
+                data.Targets.Update(target);
+            }
+            else
+            {
+                data.Targets.Add(target);
+            }
+
             data.SaveChanges();
             return Ok();
         }
@@ -78,6 +100,8 @@
                 return BadRequest(TextNotValidTarget);
             }
 
+            bool success = GCMProvider.SendMessage(target.TargetIdentifier.GCMKey, PushMessageType.SetIsTargetActive, false.ToString());
+            target.Active = !success;
             target.Deleted = true;
             data.Targets.Update(target);
             data.SaveChanges();
@@ -127,7 +151,11 @@
                 return BadRequest(TextNotValidTarget);
             }
 
-            var positions = data.Positions.All().Where(p => p.TargetIdentifierId == targetId && DbFunctions.TruncateTime(p.DateTime) == date.Date).OrderBy(p => p.DateTime).Select(HistoryPositionViewModel.FromPosition);
+            var positions = data.Positions.All()
+                .Where(p => p.TargetIdentifierId == targetId && DbFunctions.TruncateTime(p.DateTime) == date.Date)
+                .OrderBy(p => p.DateTime)
+                .ToList()
+                .Select(HistoryPositionViewModel.FromPosition);
             
             return Ok(positions);
         }
@@ -153,7 +181,14 @@
 
             if (trackingsCount == 0)
             {
-                GCMProvider.SendMessage(target.TargetIdentifier.GCMKey, PushMessageType.SetIsTargetActive, isActive.ToString());
+                bool success = GCMProvider.SendMessage(target.TargetIdentifier.GCMKey, PushMessageType.SetIsTargetActive, isActive.ToString());
+                if (!success)
+                {
+                    target.Active = !isActive;
+                    data.Targets.Update(target);
+                    data.SaveChanges();
+                    return BadRequest();
+                }
             }
 
             return Ok();
@@ -182,13 +217,38 @@
         public IHttpActionResult TurnAlarmOn(int id)
         {
             Target target;
-            if(!IsTargetValid(id, out target))
+            if (!IsTargetValid(id, out target))
             {
                 return BadRequest(TextNotValidTarget);
             }
-            
-            GCMProvider.SendMessage(target.TargetIdentifier.GCMKey, PushMessageType.TurnAlarmOn);
-            return Ok();
+
+            var currUserId = userIdProvider.GetUserId();
+            var userName = data.Users.Find(currUserId).UserName;
+
+            if (GCMProvider.SendMessage(target.TargetIdentifier.GCMKey, PushMessageType.TurnAlarmOn, userName))
+            {
+                return Ok();
+            } else
+            {
+                return BadRequest();
+            }
+        }
+
+        //For test purposes only
+        [HttpGet]
+        public IHttpActionResult TurnAlarmOn(long interval)
+        {
+            //var currUserId = userIdProvider.GetUserId();
+            //var targets
+
+            //if (GCMProvider.SendMessage(target.TargetIdentifier.GCMKey, PushMessageType.ChangeLocationInterval, interval.ToString()))
+            //{
+            //    return Ok();
+            //}
+            //else
+            {
+                return BadRequest();
+            }
         }
 
         private bool IsTargetValid(int id, out Target target)
