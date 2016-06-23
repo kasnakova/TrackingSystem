@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:background="@color/dark_blue"
+    android:layout_height="match_parent">
+
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/checkBoxShouldNotMove"
+        android:text="Should not move"
+        android:textSize="22dp"
+        android:textColor="@android:color/white"
+        android:background="@android:color/transparent"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Shouldn't move until:"
+        android:background="@android:color/transparent"
+        android:textSize="20dp"
+        android:id="@+id/textView8"
+        android:layout_below="@+id/checkBoxShouldNotMove"
+        android:layout_alignEnd="@+id/checkBoxShouldNotMove" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="CANCEL"
+        android:background="@drawable/background_blue_gradient"
+        android:id="@+id/buttonSNMCancel"
+        android:layout_below="@+id/timePickerShouldNotMove"
+        android:layout_toStartOf="@+id/buttonSNMDone"
+        android:layout_marginEnd="31dp" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/background_blue_gradient"
+        android:text="DONE"
+        android:id="@+id/buttonSNMDone"
+        android:layout_below="@+id/timePickerShouldNotMove"
+        android:layout_alignEnd="@+id/textView8" />
+
+    <DatePicker
+        android:layout_width="wrap_content"
+        android:layout_height="147dp"
+        android:id="@+id/datePickerShouldNotMove"
+        android:background="@android:color/transparent"
+        android:layout_below="@+id/textView8"
+        android:layout_centerHorizontal="true" />
+
+    <TimePicker
+        android:layout_width="wrap_content"
+        android:layout_height="150dp"
+        android:id="@+id/timePickerShouldNotMove"
+        android:background="@android:color/transparent"
+        android:layout_below="@+id/datePickerShouldNotMove"
+        android:layout_centerHorizontal="true" />
+</RelativeLayout>
