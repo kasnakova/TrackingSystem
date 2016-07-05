@@ -115,7 +115,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onRestart() {
         super.onRestart();
-        ProgressBarManager.showProgressBar(this);
         areTargetsPinned = false;
         getPositions();
     }
@@ -216,7 +215,7 @@ public class MainActivity extends AppCompatActivity
             mMap.addPolyline(options);
         }
 
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(coordinates.latitude, coordinates.longitude), 9.5f));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(coordinates.latitude, coordinates.longitude), 11f));
     }
 
     @Override

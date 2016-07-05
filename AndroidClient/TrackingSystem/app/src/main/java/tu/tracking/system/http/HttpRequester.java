@@ -18,7 +18,7 @@ import tu.tracking.system.utilities.AndroidLogger;
 public class HttpRequester extends AsyncTask<String, Void, HttpResult> {
     private final String USER_AGENT = "Mozilla/5.0";
     private final String TAG = "HttpRequester";
-    private final int CONNECTION_TIMEOUT = 5000;
+    private final int CONNECTION_TIMEOUT = 10000;
     private AsyncResponse delegate;
     private HttpURLConnection connection;
 
@@ -86,6 +86,7 @@ public class HttpRequester extends AsyncTask<String, Void, HttpResult> {
             return new HttpResult(success, url, response.toString());
         } catch (Exception e) {
             try {
+                AndroidLogger.getInstance().logMessage(TAG, "Trying again with url: " + url);
                 int responseCode = connection.getResponseCode();
                 AndroidLogger.getInstance().logMessage(TAG, "Response code from try block " + responseCode);
                 if (responseCode == 401) {

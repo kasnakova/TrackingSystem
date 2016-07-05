@@ -1,13 +1,12 @@
 package tu.tracking.system.utilities;
 
 import android.app.Activity;
-import android.widget.ProgressBar;
+import android.app.ProgressDialog;
 
 public class ProgressBarManager {
-    private static ProgressBar progressBar;
+    private static ProgressDialog progress;
 
     public static void showProgressBar(Activity activity){
-        //TODO: add progress bar
 //        RelativeLayout layout = new RelativeLayout(activity);
 //        progressBar = new ProgressBar(activity,null,android.R.attr.progressBarStyleHorizontal);
 ////        LayoutParams lp = new LayoutParams(
@@ -27,9 +26,14 @@ public class ProgressBarManager {
 //        layout.addView(progressBar, params);
 //        RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT , RelativeLayout.LayoutParams.WRAP_CONTENT );
 //        activity.setContentView(layout, layoutParams);
+        progress = new ProgressDialog(activity);
+        progress.setCancelable(false);
+        progress.setCanceledOnTouchOutside(false);
+        progress.show();
     }
 
     public static void hideProgressBar(){
+        progress.dismiss();
 //        ViewGroup vg = (ViewGroup)(progressBar.getParent());
 //        vg.removeView(progressBar);
     }

@@ -72,7 +72,7 @@
             target.DateCreated = DateTime.Now;
             target.DateUpdated = DateTime.Now;
 
-            bool success = GCMProvider.SendMessage(target.TargetIdentifier.GCMKey, PushMessageType.SetIsTargetActive, true.ToString());
+            bool success = GCMProvider.SendMessage(targetIdentifier.GCMKey, PushMessageType.SetIsTargetActive, true.ToString());
             if (!success)
             {
                 target.Active = false;
@@ -112,8 +112,19 @@
         public IHttpActionResult GetTargets()
         {
             var currentUserId = userIdProvider.GetUserId();
-            var targets = data.Targets.All().Where(n => (n.UserId == currentUserId) && (!n.Deleted)).Select(TargetViewModel.FromTarget);
-            return Ok(targets);
+            var targets = data.Targets.All().Where(n => (n.UserId == currentUserId) && (!n.Deleted));
+            foreach (var target in targets)
+            {
+                if(target.ShouldNotMove && target.ShouldNotMoveUntil < DateTime.Now)
+                {
+                    target.ShouldNotMove = false;
+                    data.Targets.Update(target);
+                }
+            }
+
+            data.SaveChanges();
+            var viewModelTargets = targets.Select(TargetViewModel.FromTarget);
+            return Ok(viewModelTargets);
         }
 
         [HttpGet]
@@ -234,9 +245,9 @@
             }
         }
 
-        //For test purposes only
+        //TODO: For test purposes only
         [HttpGet]
-        public IHttpActionResult TurnAlarmOn(long interval)
+        public IHttpActionResult ChangeLocationUpdatesInterval(long interval)
         {
             //var currUserId = userIdProvider.GetUserId();
             //var targets

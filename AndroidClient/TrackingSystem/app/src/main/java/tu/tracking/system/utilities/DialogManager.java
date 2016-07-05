@@ -1,8 +1,9 @@
 package tu.tracking.system.utilities;
 
-import android.support.v7.app.AlertDialog;
+import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.support.v7.app.AlertDialog;
 import android.telephony.TelephonyManager;
 
 import tu.tracking.system.R;
@@ -33,7 +34,7 @@ public class DialogManager {
                 })
                 .setIcon(R.mipmap.radar);
         AlertDialog alert = builder.create();
-        if(!alert.isShowing()){
+        if(!alert.isShowing() && !((Activity)context).isFinishing()){
             alert.show();
         }
     }

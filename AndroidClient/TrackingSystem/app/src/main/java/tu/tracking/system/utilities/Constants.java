@@ -44,8 +44,4 @@ public class Constants {
     public static final String JSON_EMAIL = "userName";
     public static final String JSON_ERROR_DESCRIPTION = "error_description";
     public static final String JSON_MESSAGE = "Message";
-
-    private static void deleteThisBeforeDefense(){
-        //TODO remove hard-coded identfier from add view
-    }
 }

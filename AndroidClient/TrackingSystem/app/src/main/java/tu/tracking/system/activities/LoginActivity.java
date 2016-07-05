@@ -8,7 +8,6 @@ import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -56,6 +55,7 @@ public class LoginActivity extends AppCompatActivity implements TrackingSystemHt
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar.setTitle("Sign in/Register");
         setSupportActionBar(toolbar);
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fabInAdd);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -98,7 +98,6 @@ public class LoginActivity extends AppCompatActivity implements TrackingSystemHt
         menu.findItem(R.id.action_help).setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
-                Log.d("MenuKor", "setOnMenuItemClickListener");
                 onHelpMenuItemClicked();
                 return true;
             }
@@ -112,7 +111,6 @@ public class LoginActivity extends AppCompatActivity implements TrackingSystemHt
         int id = item.getItemId();
 
         if (id == R.id.action_help) {
-            Log.d("MenuKor", "onOptionsItemSelected");
             onHelpMenuItemClicked();
             return true;
         }
@@ -195,7 +193,7 @@ public class LoginActivity extends AppCompatActivity implements TrackingSystemHt
                     case URL_REGISTER:
                         if (result.getSuccess()) {
                             RelativeLayout loginView = (RelativeLayout) findViewById(R.id.loginView);
-                            FeedbackManager.makeSnack(loginView, "Successful registration. You may help now.");
+                            FeedbackManager.makeSnack(loginView, "Successful registration. You may login now.");
                             editTextConfirmPassword.setText(null);
                         } else {
                             DialogManager.makeAlert(this, "Problem registering", obj.getString(Constants.JSON_MESSAGE));

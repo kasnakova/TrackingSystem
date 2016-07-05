@@ -7,12 +7,10 @@
     public class PositionBindingModel
     {
         [Required]
-        [Range(MinLatitude, MaxLatitude)]
-        public double Latitude { get; set; }
+        public string Latitude { get; set; }
 
         [Required]
-        [Range(MinLongitude, MaxLongitude)]
-        public double Longitude { get; set; }
+        public string Longitude { get; set; }
 
         [Required]
         [MinLength(MinLengthIdentifier)]

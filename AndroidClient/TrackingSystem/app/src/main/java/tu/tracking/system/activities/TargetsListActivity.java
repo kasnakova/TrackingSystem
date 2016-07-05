@@ -76,6 +76,7 @@ public class TargetsListActivity extends AppCompatActivity implements Navigation
 
         //Toolbar and navigation drawer set up
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar.setTitle("Targets");
         setSupportActionBar(toolbar);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -234,7 +235,6 @@ public class TargetsListActivity extends AppCompatActivity implements Navigation
 
             @Override
             public void onClick(MotionEvent e) {
-                //TODO opraviav servica da e false shouldnotmove ako e izteklo vremeto
                 Intent intent = new Intent(context, MainActivity.class);
                 TargetModel target = getTargetFromList(e);
                 if (target != null) {
@@ -338,7 +338,7 @@ public class TargetsListActivity extends AppCompatActivity implements Navigation
                         if (targets.size() == 0) {
                             FeedbackManager.makeToast(this, "You have no targets.", Toast.LENGTH_SHORT);
                         }
-                        //TODO show message if there are no targets
+
                         populateNoteListView();
                     } else {
                         DialogManager.makeAlert(context, Constants.TITLE_PROBLEM_OCCURRED, "Sorry, but we couldn't retrieve your targets");

@@ -1,7 +1,8 @@
 package tu.tracking.system.http;
 
 public class TrackingSystemServices {
-    public static final String URL_BASE = "http://37.143.216.196:50264/";//"http://192.168.0.128:50264/";
+    public static final String URL_BASE = //"http://192.168.43.77:50264/";
+                                            "http://37.143.216.196:50264/";//"http://192.168.0.128:50264/";
     public static final String URL_LOGIN = URL_BASE + "Token";
     public static final String URL_REGISTER = URL_BASE + "api/Account/Register";
     public static final String URL_LOGOUT = URL_BASE + "api/Account/Logout";

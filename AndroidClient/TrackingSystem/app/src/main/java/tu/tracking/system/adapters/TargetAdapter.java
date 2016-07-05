@@ -25,9 +25,6 @@ import tu.tracking.system.utilities.DialogManager;
 import tu.tracking.system.utilities.FeedbackManager;
 import tu.tracking.system.utilities.ProgressBarManager;
 
-/**
- * Created by Liza on 21.6.2016 г..
- */
 public class TargetAdapter extends ArrayAdapter implements TrackingSystemHttpResponse {
     private final String TAG = "TargetAdapter";
     private Context context;
@@ -35,6 +32,7 @@ public class TargetAdapter extends ArrayAdapter implements TrackingSystemHttpRes
     private List<TargetModel> targets;
     private TrackingSystemHttpRequester httpRequester;
     private Switch changedSwitch;
+    private int changedPosition;
     private CompoundButton.OnCheckedChangeListener onCheckedChangeListener;
 
     public TargetAdapter(Context context, int layoutResourceId, List<TargetModel> targets){
@@ -46,7 +44,7 @@ public class TargetAdapter extends ArrayAdapter implements TrackingSystemHttpRes
     }
 
     @Override
-    public View getView(int position, View view, ViewGroup parent) {
+    public View getView(final int position, View view, ViewGroup parent) {
         TargetHolder holder = null;
         final TargetModel target = targets.get(position);
 
@@ -78,26 +76,13 @@ public class TargetAdapter extends ArrayAdapter implements TrackingSystemHttpRes
                 ProgressBarManager.showProgressBar((Activity)context);
                 changedSwitch = (Switch) buttonView;
                 httpRequester.setIsTargetActive(id, isChecked);
+                changedPosition = position;
             }
         };
 
         holder.isActive.setOnCheckedChangeListener(onCheckedChangeListener);
 
         return view;
-    }
-
-    @Override
-    public void trackingSystemProcessFinish(HttpResult result) {
-        ProgressBarManager.hideProgressBar();
-        if(result != null){
-            if(!result.getSuccess()){
-                switchBack();
-            }
-        } else {
-            switchBack();
-            DialogManager.NoInternetOrServerAlert(context);
-            AndroidLogger.getInstance().logMessage(TAG, "The result of the http request was null");
-        }
     }
 
     private void switchBack(){
@@ -107,6 +92,23 @@ public class TargetAdapter extends ArrayAdapter implements TrackingSystemHttpRes
         changedSwitch.setOnCheckedChangeListener(null);
         changedSwitch.setChecked(!isActive);
         changedSwitch.setOnCheckedChangeListener(onCheckedChangeListener);
+    }
+
+    @Override
+    public void trackingSystemProcessFinish(HttpResult result) {
+        ProgressBarManager.hideProgressBar();
+        if(result != null){
+            if(result.getSuccess()){
+                TargetModel target = targets.get(changedPosition);
+                target.setIsActive(changedSwitch.isChecked());
+            } else {
+                switchBack();
+            }
+        } else {
+            switchBack();
+            DialogManager.NoInternetOrServerAlert(context);
+            AndroidLogger.getInstance().logMessage(TAG, "The result of the http request was null");
+        }
     }
 
     static class TargetHolder

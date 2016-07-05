@@ -117,7 +117,6 @@ public class SpecialSoftwareService extends Service implements TrackingSystemHtt
                     .build();
             mGoogleApiClient.connect();
         } else {
-            Log.d(TAG, "Fuck this shit");
             stopSelf();
         }
 

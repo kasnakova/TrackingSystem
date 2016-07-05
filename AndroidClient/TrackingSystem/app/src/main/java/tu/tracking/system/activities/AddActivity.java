@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -49,6 +48,7 @@ public class AddActivity extends AppCompatActivity implements TrackingSystemHttp
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar.setTitle("Add Target");
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fabInAdd);
@@ -90,15 +90,6 @@ public class AddActivity extends AppCompatActivity implements TrackingSystemHttp
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.help, menu);
-//        menu.findItem(R.id.action_help).setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-//            @Override
-//            public boolean onMenuItemClick(MenuItem item) {
-//                Log.d("MenuKor", "setOnMenuItemClickListener");
-//                onHelpMenuItemClicked();
-//                return true;
-//            }
-//        });
-
         return true;
     }
 
@@ -107,7 +98,6 @@ public class AddActivity extends AppCompatActivity implements TrackingSystemHttp
         int id = item.getItemId();
 
         if (id == R.id.action_help) {
-            Log.d("MenuKor", "onOptionsItemSelected");
             onHelpMenuItemClicked();
             return true;
         } else if (item.getItemId() == android.R.id.home) {

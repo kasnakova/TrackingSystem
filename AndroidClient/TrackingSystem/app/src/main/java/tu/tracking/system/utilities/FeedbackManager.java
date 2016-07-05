@@ -17,7 +17,6 @@ public class FeedbackManager {
     }
 
     public static void makeToast(Context context, String message, int length){
-        //TODO use this everywhere
         Toast toast = Toast.makeText(context, message, length);
         View view = toast.getView();
         view.setBackgroundResource(R.color.dark_blue);

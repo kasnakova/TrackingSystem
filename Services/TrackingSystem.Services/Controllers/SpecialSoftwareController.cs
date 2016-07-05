@@ -58,7 +58,9 @@
         public IHttpActionResult ReceiveCoordinates(PositionBindingModel positionModel)
         {
             var existingIdentifier = data.TargetIdentifiers.All().Where(i => i.Identifier == positionModel.Identifier).FirstOrDefault();
-            if (existingIdentifier == null || !ModelState.IsValid)
+            var latitude = 0.0;
+            var longitude = 0.0;
+            if (existingIdentifier == null || !ModelState.IsValid || !double.TryParse(positionModel.Latitude.Replace(',', '.'), out latitude) || !double.TryParse(positionModel.Longitude.Replace(',', '.'), out longitude))
             {
                 return BadRequest();
             }
@@ -66,8 +68,8 @@
             var newPosition = new Position()
             {
                 TargetIdentifierId = existingIdentifier.Id,
-                Latitude = positionModel.Latitude,
-                Longitude = positionModel.Longitude,
+                Latitude = latitude,
+                Longitude = longitude,
                 DateTime = DateTime.Now
             };
 

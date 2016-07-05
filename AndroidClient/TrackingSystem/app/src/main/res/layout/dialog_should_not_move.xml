@@ -32,6 +32,7 @@
         android:text="CANCEL"
         android:background="@drawable/background_blue_gradient"
         android:id="@+id/buttonSNMCancel"
+        android:layout_marginBottom="@dimen/margin_bottom_buttons"
         android:layout_below="@+id/timePickerShouldNotMove"
         android:layout_toStartOf="@+id/buttonSNMDone"
         android:layout_marginEnd="31dp" />
@@ -42,6 +43,7 @@
         android:background="@drawable/background_blue_gradient"
         android:text="DONE"
         android:id="@+id/buttonSNMDone"
+        android:layout_marginBottom="@dimen/margin_bottom_buttons"
         android:layout_below="@+id/timePickerShouldNotMove"
         android:layout_alignEnd="@+id/textView8" />
 
